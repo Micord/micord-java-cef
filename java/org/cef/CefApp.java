@@ -145,19 +145,19 @@ public class CefApp extends CefAppHandlerAdapter {
   private CefApp(String [] args, CefSettings settings)
       throws UnsatisfiedLinkError {
     super(args);
+    String library_path = getJcefLibPath();
     if (settings != null)
       settings_ = settings.clone();
     if (OS.isWindows()) {
-      System.loadLibrary("jawt");
-      System.loadLibrary("libcef");
+      System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");      
+      System.load(library_path + "libcef.dll");
     } else if (OS.isLinux()) {
       System.loadLibrary("cef");
-    }
-    System.loadLibrary("jcef");
+    }    
+    System.load(library_path + "jcef.dll");
     if (appHandler_ == null) {
       appHandler_ = this;
     }
-
     // Perform native pre-initialization.
     if (!N_PreInitialize())
       throw new IllegalStateException("Failed to pre-initialize native code");
