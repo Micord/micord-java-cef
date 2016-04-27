@@ -4,30 +4,16 @@
 
 package org.cef.browser;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Graphics;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.event.*;
 import java.nio.ByteBuffer;
-
 import javax.media.nativewindow.NativeSurface;
-import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
-import javax.media.opengl.GLCapabilities;
-import javax.swing.MenuSelectionManager;
-import javax.swing.SwingUtilities;
+import javax.media.opengl.awt.GLJPanel;
+import javax.swing.*;
 
 import org.cef.callback.CefDragData;
 import org.cef.handler.CefClientHandler;
@@ -40,7 +26,7 @@ import org.cef.handler.CefRenderHandler;
  */
 class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
   private CefRenderer renderer_;
-  private GLCanvas canvas_;
+  private GLJPanel canvas_;
   private long window_handle_ = 0;
   private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1);  // Work around CEF issue #1437.
   private Point screenPoint_ = new Point(0, 0);
@@ -133,7 +119,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
   private void createGLCanvas() {
     GLProfile glprofile = GLProfile.getMaxFixedFunc(true);
     GLCapabilities glcapabilities = new GLCapabilities(glprofile);
-    canvas_ = new GLCanvas(glcapabilities) {
+    canvas_ = new GLJPanel(glcapabilities) {
       @Override
       public void paint(Graphics g) {
         if (parent_ != null) {
