@@ -3,14 +3,49 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
+
+  <organization>
+    <name>Center Group</name>
+  </organization>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>CG Repo</name>
+      <url>http://artifactory.cg.ru/artifactory/all</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>central</id>
+      <name>CG plugins-releases</name>
+      <url>http://artifactory.cg.ru/artifactory/all</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <distributionManagement>
+    <repository>
+      <id>central</id>
+      <name>ASD CG Release repository</name>
+      <url>http://artifactory.cg.ru/artifactory/libs-releases-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>ASD CG Snapshots repository</name>
+      <url>http://artifactory.cg.ru/artifactory/libs-snapshots-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.jogamp.gluegen</groupId>
@@ -31,6 +66,7 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
   <build>
     <sourceDirectory>./java</sourceDirectory>
     <pluginManagement>
