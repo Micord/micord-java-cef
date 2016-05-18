@@ -1240,20 +1240,24 @@ JNIEXPORT void JNICALL Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent
   JNI_STATIC_DEFINE_INT(env, cls, KEY_RELEASED);
   JNI_STATIC_DEFINE_INT(env, cls, KEY_TYPED);
 
-  int event_type, modifiers;
-  char key_char;
+  int event_type, modifiers, key_code;
+  wchar_t key_char;
   if (!CallJNIMethodI_V(env, cls, key_event, "getID", &event_type) ||
       !CallJNIMethodC_V(env, cls, key_event, "getKeyChar", &key_char) ||
-      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers)) {
+      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers) ||
+	  !CallJNIMethodI_V(env, cls, key_event, "getKeyCode", &key_code)) {
     return;
   }
 
   CefKeyEvent cef_event;
   cef_event.modifiers = GetCefModifiers(env, cls, modifiers);
 
-#if defined(OS_WIN)
-  BYTE VkCode = LOBYTE(VkKeyScanA(key_char));
-  UINT scanCode = MapVirtualKey(VkCode, MAPVK_VK_TO_VSC);
+#if defined(OS_WIN) 
+
+  DLOG(WARNING) << "KEY_CHAR: " << key_char;
+  DLOG(WARNING) << "KEY_EVENT: " << key_event;
+  BYTE VkCode = LOBYTE(VkKeyScanW(key_char));    
+  UINT scanCode = MapVirtualKey(VkCode, MAPVK_VK_TO_VSC);  
   cef_event.native_key_code = (scanCode << 16) |  // key scan code
                               1;  // key repeat count
 #elif defined(OS_LINUX) || defined(OS_MACOSX)
@@ -1419,7 +1423,9 @@ JNIEXPORT void JNICALL Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent
 
   if (event_type == JNI_STATIC(KEY_PRESSED)) {
 #if defined(OS_WIN)
-    cef_event.windows_key_code = VkCode;
+    cef_event.windows_key_code = key_code;
+	cef_event.character = key_code;
+	cef_event.unmodified_character = key_code;
 #endif
     cef_event.type = KEYEVENT_RAWKEYDOWN;
   } else if (event_type == JNI_STATIC(KEY_RELEASED)) {
@@ -1436,8 +1442,7 @@ JNIEXPORT void JNICALL Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent
     cef_event.type = KEYEVENT_CHAR;
   } else {
     return;
-  }
-
+  }  
   browser->GetHost()->SendKeyEvent(cef_event);
 }
 
