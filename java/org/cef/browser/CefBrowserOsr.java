@@ -207,7 +207,9 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     canvas_.addMouseWheelListener(new MouseWheelListener() {
       @Override
       public void mouseWheelMoved(MouseWheelEvent e) {
-        sendMouseWheelEvent(e);
+        MouseWheelEvent mwe;
+        mwe = new MouseWheelEvent((Component)e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), e.getX(), e.getY(), 0, 0, e.getClickCount(), e.isPopupTrigger(), e.getScrollType(), e.getScrollAmount()*-64, e.getWheelRotation(), e.getPreciseWheelRotation());
+        sendMouseWheelEvent(mwe);
       }
     });
 
