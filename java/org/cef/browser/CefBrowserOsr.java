@@ -37,6 +37,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
   private CefBrowserOsr parent_ = null;
   private Point inspectAt_ = null;
   private CefBrowserOsr devTools_ = null;;
+  private int scrollAmount = 1;
 
   CefBrowserOsr(CefClientHandler clientHandler,
                 String url,
@@ -100,6 +101,11 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
                                     inspectAt);
     }
     return devTools_;
+  }
+
+  @Override
+  public void setScrollAmount(int scrollAmount) {
+    this.scrollAmount = scrollAmount;
   }
 
   private long getWindowHandle() {
@@ -208,7 +214,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
       @Override
       public void mouseWheelMoved(MouseWheelEvent e) {
         MouseWheelEvent mwe;
-        mwe = new MouseWheelEvent((Component)e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), e.getX(), e.getY(), 0, 0, e.getClickCount(), e.isPopupTrigger(), e.getScrollType(), e.getScrollAmount()*-64, e.getWheelRotation(), e.getPreciseWheelRotation());
+        mwe = new MouseWheelEvent((Component)e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), e.getX(), e.getY(), 0, 0, e.getClickCount(), e.isPopupTrigger(), e.getScrollType(), e.getScrollAmount()*-scrollAmount, e.getWheelRotation(), e.getPreciseWheelRotation());
         sendMouseWheelEvent(mwe);
       }
     });
