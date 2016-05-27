@@ -307,7 +307,8 @@ class CefBrowserWr extends CefBrowser_N {
 
   @Override
   public void setScrollAmount(int scrollAmount) {
-    //do nothing. The method is only intended for CefBrowserOSR
+    //do nothing. The method is only intended to be used within CefBrowserOSR
+    throw new UnsupportedOperationException();
   }
 
   private long getWindowHandle() {
