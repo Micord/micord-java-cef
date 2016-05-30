@@ -1,4 +1,3 @@
-#define JVK_DELETE  0x7F
 #define JVK_COMMA	0x2C
 #define JVK_MINUS	0x2D
 #define JVK_PERIOD	0x2E 
