@@ -305,6 +305,12 @@ class CefBrowserWr extends CefBrowser_N {
     return devTools_;
   }
 
+  @Override
+  public void setScrollAmount(int scrollAmount) {
+    //do nothing. The method is only intended to be used within CefBrowserOSR
+    throw new UnsupportedOperationException();
+  }
+
   private long getWindowHandle() {
     if (window_handle_ == 0 && OS.isMacintosh()) {
       try {
