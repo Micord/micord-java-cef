@@ -148,7 +148,7 @@ bool CallJNIMethodI_V(JNIEnv* env, jclass cls, jobject obj,
 
 // Call a JNI method that returns a char and accepts no arguments.
 bool CallJNIMethodC_V(JNIEnv* env, jclass cls, jobject obj,
-                      const char* method_name, char* value);
+                      const char* method_name, wchar_t* value);
 
 // Retrieve the CefPageRange equivalent of a org.cef.misc.CefPageRange
 CefPageRange GetJNIPageRange(JNIEnv* env, jobject obj);
