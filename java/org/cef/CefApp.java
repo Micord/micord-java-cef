@@ -149,12 +149,15 @@ public class CefApp extends CefAppHandlerAdapter {
     if (settings != null)
       settings_ = settings.clone();
     if (OS.isWindows()) {
-      System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");      
+      System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
       System.load(library_path + "libcef.dll");
     } else if (OS.isLinux()) {
       System.loadLibrary("cef");
-    }    
-    System.load(library_path + "jcef.dll");
+    } else if (OS.isMacintosh()) {
+      System.load(library_path + "/jcef_app.app/Contents/Java/libjcef.dylib");
+    } else {
+      System.load(library_path + "jcef.dll");
+    }
     if (appHandler_ == null) {
       appHandler_ = this;
     }
