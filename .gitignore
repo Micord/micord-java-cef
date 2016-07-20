@@ -26,7 +26,6 @@
 *~
 !Android.mk
 .*.sw?
-.DS_Store
 .classpath
 .cproject
 .gdb_history
@@ -41,7 +40,7 @@
 cscope.*
 Session.vim
 tags
-Thumbs.db
+
 # JCEF generated directories
 /binary_distrib
 /jcef_build
@@ -54,3 +53,17 @@ Thumbs.db
 /third_party/cef/macosx64/
 /third_party/cef/win32/
 /third_party/cef/win64/
+
+# os meta files
+Thumbs.db
+.DS_Store
+
+#
+# IntelliJ IDEA project files
+#
+.idea*/
+*.ipr
+*.iml
+*.iws
+*.ids
+atlassian-ide-plugin.xml
