@@ -67,3 +67,6 @@ Thumbs.db
 *.iws
 *.ids
 atlassian-ide-plugin.xml
+
+#ignore target dir
+target*/
