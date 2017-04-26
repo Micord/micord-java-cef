@@ -76,6 +76,29 @@ void ClientApp::OnBeforeCommandLineProcessing(const CefString& process_type,
   }
 }
 
+void ClientApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {
+  if (!app_handler_)
+    return;
+
+  BEGIN_ENV(env)
+  jobject jregistrar = NewJNIObject(env, "org/cef/callback/CefSchemeRegistrar_N");
+  if (jregistrar != NULL) {
+    SetCefForJNIObject(env, jregistrar, registrar, "CefSchemeRegistrar");
+    JNI_CALL_VOID_METHOD(env,
+                         app_handler_,
+                         "onRegisterCustomSchemes",
+                         "(Lorg/cef/callback/CefSchemeRegistrar;)V",
+                         jregistrar);
+    SetCefForJNIObject<CefSchemeRegistrar>(env, jregistrar, NULL, "CefSchemeRegistrar");
+  }
+  END_ENV(env)
+}
+
+CefRefPtr<CefBrowserProcessHandler> ClientApp::GetBrowserProcessHandler() {
+  return process_handler_.get();
+}
+
+#if defined(OS_MACOSX)
 bool ClientApp::HandleTerminate() {
   BEGIN_ENV(env)
   jclass cls = FindClass(env, "org/cef/CefApp");
@@ -98,33 +121,14 @@ bool ClientApp::HandleTerminate() {
   END_ENV(env)
   return true;
 }
+#endif  // defined(OS_MACOSX)
 
-void ClientApp::OnRegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar) {
-  if (!app_handler_)
-    return;
-
-  BEGIN_ENV(env)
-  jobject jregistrar = NewJNIObject(env, "org/cef/callback/CefSchemeRegistrar_N");
-  if (jregistrar != NULL) {
-    SetCefForJNIObject(env, jregistrar, registrar.get(), "CefSchemeRegistrar");
-    JNI_CALL_VOID_METHOD(env,
-                         app_handler_,
-                         "onRegisterCustomSchemes",
-                         "(Lorg/cef/callback/CefSchemeRegistrar;)V",
-                         jregistrar);
-    SetCefForJNIObject<CefSchemeRegistrar>(env, jregistrar, NULL, "CefSchemeRegistrar");
-  }
-  END_ENV(env)
-}
-
-CefRefPtr<CefBrowserProcessHandler> ClientApp::GetBrowserProcessHandler() {
-  return process_handler_.get();
-}
-
+// static
 void ClientApp::registerTempFile(const std::string& tmpFile) {
   GetTempFilesSet().insert(tmpFile);
 }
 
+// static
 void ClientApp::eraseTempFiles() {
   std::set<std::string>& tempFiles =  GetTempFilesSet();
   std::set<std::string>::iterator iter;

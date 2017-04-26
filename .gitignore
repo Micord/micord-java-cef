@@ -47,12 +47,8 @@ tags
 /out
 # JCEF generated files
 /native/jcef_version.h
-# CEF download directories
-/third_party/cef/linux32/
-/third_party/cef/linux64/
-/third_party/cef/macosx64/
-/third_party/cef/win32/
-/third_party/cef/win64/
+# CEF downloads
+/third_party/cef/cef_binary_*
 
 # os meta files
 Thumbs.db

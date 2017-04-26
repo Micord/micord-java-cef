@@ -78,6 +78,8 @@ set(JCEF_SRCS
   client_handler.h
   completion_callback.cpp
   completion_callback.h
+  context.cpp
+  context.h
   context_menu_handler.cpp
   context_menu_handler.h
   cookie_visitor.cpp
@@ -210,6 +212,7 @@ if(OS_LINUX)
 
   # Helper executable target.
   add_executable(${JCEF_HELPER_TARGET} ${JCEF_HELPER_SRCS})
+  SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_HELPER_TARGET})
   add_dependencies(${JCEF_HELPER_TARGET} libcef_dll_wrapper)
   target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
@@ -219,6 +222,7 @@ if(OS_LINUX)
 
   # JCEF library target.
   add_library(${JCEF_TARGET} SHARED ${JCEF_SRCS})
+  SET_LIBRARY_TARGET_PROPERTIES(${JCEF_TARGET})
   add_dependencies(${JCEF_TARGET} libcef_dll_wrapper ${JCEF_HELPER_TARGET})
   target_link_libraries(${JCEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS} ${JNI_LIBRARIES})
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
@@ -272,17 +276,19 @@ if(OS_MACOSX)
 
   # Helper executable target.
   add_executable(${JCEF_HELPER_TARGET} MACOSX_BUNDLE ${JCEF_HELPER_SRCS})
+  SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_HELPER_TARGET})
   add_dependencies(${JCEF_HELPER_TARGET} libcef_dll_wrapper)
   target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
   set_target_properties(${JCEF_HELPER_TARGET} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/resources/jcef-Info.plist
     )
 
-  # Fix the framework link in the helper executable.
-  FIX_MACOSX_HELPER_FRAMEWORK_LINK(${JCEF_HELPER_TARGET} ${JCEF_HELPER_APP})
+  # Fix the framework rpath in the helper executable.
+  FIX_MACOSX_HELPER_FRAMEWORK_RPATH(${JCEF_HELPER_TARGET})
 
   # JCEF library target.
   add_library(${JCEF_TARGET} SHARED ${JCEF_RESOURCES_SRCS} ${JCEF_SRCS})
+  SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_TARGET})
   add_dependencies(${JCEF_TARGET} libcef_dll_wrapper "${JCEF_HELPER_TARGET}")
   target_link_libraries(${JCEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS}  ${JNI_LIBRARIES})
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
@@ -324,8 +330,8 @@ if(OS_MACOSX)
     VERBATIM
     )
 
-  # Fix the framework link in the JCEF library.
-  FIX_MACOSX_MAIN_FRAMEWORK_LINK(${JCEF_TARGET} ${JCEF_TARGET_LIBRARY_APP_PATH})
+  # Fix the framework rpath in the JCEF library.
+  FIX_MACOSX_MAIN_FRAMEWORK_RPATH(${JCEF_TARGET})
 endif()
 
 
@@ -336,11 +342,13 @@ endif()
 if(OS_WINDOWS)
   # Helper executable target.
   add_executable(${JCEF_HELPER_TARGET} WIN32 ${JCEF_HELPER_SRCS})
+  SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_HELPER_TARGET})
   add_dependencies(${JCEF_HELPER_TARGET} libcef_dll_wrapper)
   target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
 
   # JCEF library target.
   add_library(${JCEF_TARGET} SHARED ${JCEF_SRCS})
+  SET_LIBRARY_TARGET_PROPERTIES(${JCEF_TARGET})
   add_dependencies(${JCEF_TARGET} libcef_dll_wrapper ${JCEF_HELPER_TARGET})
   target_link_libraries(${JCEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS} ${JNI_LIBRARIES})
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
@@ -351,8 +359,9 @@ if(OS_WINDOWS)
     COMPILE_FLAGS -DUSING_JAVA
     )
 
-  # Add the custom manifest files to the executable.
+  # Add the custom manifest files to the DLL and helper EXE.
   ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${JCEF_TARGET}" "dll")
+  ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${JCEF_HELPER_TARGET}" "exe")
 
   # Copy binary and resource files to the target output directory.
   COPY_FILES("${JCEF_TARGET}" "${CEF_BINARY_FILES}" "${CEF_BINARY_DIR}" "${CEF_TARGET_OUT_DIR}")
