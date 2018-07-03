@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.locks.Condition;
@@ -20,11 +21,14 @@ import javax.swing.Timer;
 import org.cef.callback.CefSchemeHandlerFactory;
 import org.cef.handler.CefAppHandler;
 import org.cef.handler.CefAppHandlerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Exposes static methods for managing the global CEF context.
  */
 public class CefApp extends CefAppHandlerAdapter {
+  private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   public final class CefVersion {
     public final int JCEF_COMMIT_NUMBER;
@@ -146,20 +150,27 @@ public class CefApp extends CefAppHandlerAdapter {
   private CefApp(String [] args, CefSettings settings)
       throws UnsatisfiedLinkError {
     super(args);
+    LOG.debug("CefApp: Call super()");
     String library_path = getJcefLibPath();
+      LOG.debug("CefApp: Get libs path");
     if (settings != null)
       settings_ = settings.clone();
     if (OS.isWindows()) {
+      LOG.debug("CefApp: Start load libs");
       System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
+      LOG.debug("CefApp: jawt.dll load finished ");
       System.load(library_path + "libcef.dll");
+      LOG.debug("CefApp: libcef.dll load finished ");
     } else if (OS.isLinux()) {
       System.loadLibrary("cef");
     } else if (OS.isMacintosh()) {
       System.load(library_path + "/jcef_app.app/Contents/Java/libjcef.dylib");
     }
     System.load(library_path + "jcef.dll");
+    LOG.debug("CefApp: jcef.dll load finished ");
     if (appHandler_ == null) {
       appHandler_ = this;
+      LOG.debug("CefApp: appHandler initialized");
     }
 
     // Execute on the AWT event dispatching thread.
@@ -168,14 +179,20 @@ public class CefApp extends CefAppHandlerAdapter {
         @Override
         public void run() {
           // Perform native pre-initialization.
+          LOG.debug("CefApp: Start run CefApp");
           if (!N_PreInitialize())
             throw new IllegalStateException("Failed to pre-initialize native code");
         }
       };
-      if (SwingUtilities.isEventDispatchThread())
+      if (SwingUtilities.isEventDispatchThread()) {
+        LOG.debug("CefApp: just run");
         r.run();
-      else
+      }
+      else {
+        LOG.debug("CefApp: run & wait");
         SwingUtilities.invokeAndWait(r);
+        LOG.debug("CefApp: run & wait completed");
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -184,12 +201,15 @@ public class CefApp extends CefAppHandlerAdapter {
       @Override
       public void run() {
         try {
+          LOG.debug("CefApp: dispose clients");
           for (CefClient c : clients_) {
             c.dispose();
+            LOG.debug("CefApp: dispose client");
           }
 
           // Wait for shutdown() to complete.
           cefShutdown.awaitUninterruptibly();
+          LOG.debug("CefApp: disposed");
 
           // Avoid a deadlock. Give the native code at least 150 milliseconds
           // to terminate.
@@ -238,6 +258,7 @@ public class CefApp extends CefAppHandlerAdapter {
 
   public static synchronized CefApp getInstance(String [] args,
       CefSettings settings) throws UnsatisfiedLinkError {
+    System.out.println("START GET INSTANCE");
     if (settings != null) {
       if (getState() != CefAppState.NONE && getState() != CefAppState.NEW)
         throw new IllegalStateException("Settings can only be passed to CEF" +
@@ -246,9 +267,12 @@ public class CefApp extends CefAppHandlerAdapter {
     if (self == null) {
       if (getState() == CefAppState.TERMINATED)
         throw new IllegalStateException("CefApp was terminated");
+      System.out.println("START New CEfAPP");
       self = new CefApp(args, settings);
+      System.out.println("END New CEfAPP");
       setState(CefAppState.NEW);
     }
+    System.out.println("END GET INSTANCE");
     return self;
   }
 
