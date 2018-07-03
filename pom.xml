@@ -6,7 +6,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.26_cg_4</version>
+  <version>3.26_cg_6</version>
   <packaging>bundle</packaging>
 
   <properties>
@@ -70,21 +70,19 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
       <version>${slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -119,7 +117,7 @@
           <configuration>
             <instructions>
               <Import-Package>
-                !com.jogamp.openal,!com.jogamp.openal.*, javax.swing
+                !com.jogamp.openal,!com.jogamp.openal.*, javax.swing, org.slf4j.*
               </Import-Package>
               <Embed-Dependency>
                 groupId=org.jogamp.gluegen;artifactId=gluegen-rt;inline=false,

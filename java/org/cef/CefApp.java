@@ -11,6 +11,7 @@ import java.io.FilenameFilter;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -29,7 +30,8 @@ import org.slf4j.LoggerFactory;
  */
 public class CefApp extends CefAppHandlerAdapter {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
+  private static final ReentrantLock browserStateLock = new ReentrantLock();
+  private static final Condition browserStateReady = browserStateLock.newCondition();
   public final class CefVersion {
     public final int JCEF_COMMIT_NUMBER;
 
@@ -40,6 +42,7 @@ public class CefApp extends CefAppHandlerAdapter {
     public final int CHROME_VERSION_MINOR;
     public final int CHROME_VERSION_BUILD;
     public final int CHROME_VERSION_PATCH;
+
 
     private CefVersion(int jcefCommitNo, int cefMajor, int cefCommitNo,
                        int chrMajor, int chrMin, int chrBuild, int chrPatch) {
@@ -213,7 +216,7 @@ public class CefApp extends CefAppHandlerAdapter {
 
           // Avoid a deadlock. Give the native code at least 150 milliseconds
           // to terminate.
-          Thread.sleep(150);
+          Thread.sleep(500);
         } catch (Exception e) { }
       }
     });
@@ -258,7 +261,8 @@ public class CefApp extends CefAppHandlerAdapter {
 
   public static synchronized CefApp getInstance(String [] args,
       CefSettings settings) throws UnsatisfiedLinkError {
-    System.out.println("START GET INSTANCE");
+    LOG.debug("CefApp: START GET INSTANCE");
+
     if (settings != null) {
       if (getState() != CefAppState.NONE && getState() != CefAppState.NEW)
         throw new IllegalStateException("Settings can only be passed to CEF" +
@@ -267,12 +271,12 @@ public class CefApp extends CefAppHandlerAdapter {
     if (self == null) {
       if (getState() == CefAppState.TERMINATED)
         throw new IllegalStateException("CefApp was terminated");
-      System.out.println("START New CEfAPP");
+      LOG.debug("CefApp: START New CefApp");
       self = new CefApp(args, settings);
-      System.out.println("END New CEfAPP");
+      LOG.debug("CefApp: END New CefApp");
       setState(CefAppState.NEW);
     }
-    System.out.println("END GET INSTANCE");
+    LOG.debug("CefApp: END GET INSTANCE");
     return self;
   }
 
@@ -298,15 +302,31 @@ public class CefApp extends CefAppHandlerAdapter {
    * @return current state.
    */
   public final static CefAppState getState() {
-    synchronized (state_) {
+
+    try {
+      browserStateLock.tryLock(20L, TimeUnit.SECONDS);
       return state_;
+    } catch (InterruptedException e) {
+      throw new IllegalStateException("CefApp get state timeout");
+    } finally {
+      browserStateLock.unlock();
     }
   }
 
   private static final void setState(final CefAppState state) {
-    synchronized (state_) {
-      state_ = state;
+    try {
+      if (browserStateLock.tryLock(20L, TimeUnit.SECONDS)) {
+        state_ = state;
+      }
+      else {
+        throw new IllegalStateException("CefApp set state timeout");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } finally {
+      browserStateLock.unlock();
     }
+
     // Execute on the AWT event dispatching thread.
     SwingUtilities.invokeLater(new Runnable() {
       @Override
@@ -374,7 +394,7 @@ public class CefApp extends CefAppHandlerAdapter {
         return client;
 
       default:
-        throw new IllegalStateException("Can't crate client in state " + state_);
+        throw new IllegalStateException("Can't create client in state " + state_);
     }
 
   }
@@ -418,6 +438,7 @@ public class CefApp extends CefAppHandlerAdapter {
 
   /**
    * This method is called by a CefClient if it was disposed. This causes
+   * CefApp to clean up its list of available client instances. If all clients
    * CefApp to clean up its list of available client instances. If all clients
    * are disposed, CefApp will be shutdown.
    * @param client the disposed client.
