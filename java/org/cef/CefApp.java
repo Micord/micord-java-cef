@@ -216,7 +216,7 @@ public class CefApp extends CefAppHandlerAdapter {
 
           // Avoid a deadlock. Give the native code at least 150 milliseconds
           // to terminate.
-          Thread.sleep(500);
+          Thread.sleep(500); //TODO убрать таймер в WEBBPMNEXT-5070
         } catch (Exception e) { }
       }
     });
