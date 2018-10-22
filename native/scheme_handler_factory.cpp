@@ -3,8 +3,9 @@
 // can be found in the LICENSE file.
 
 #include "scheme_handler_factory.h"
-#include "resource_handler.h"
+
 #include "jni_util.h"
+#include "resource_handler.h"
 
 SchemeHandlerFactory::SchemeHandlerFactory(JNIEnv* env, jobject jfactory) {
   jfactory_ = env->NewGlobalRef(jfactory);
@@ -16,10 +17,10 @@ SchemeHandlerFactory::~SchemeHandlerFactory() {
 }
 
 CefRefPtr<CefResourceHandler> SchemeHandlerFactory::Create(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      const CefString& scheme_name,
-      CefRefPtr<CefRequest> request) {
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    const CefString& scheme_name,
+    CefRefPtr<CefRequest> request) {
   JNIEnv* env = GetJNIEnv();
   if (!env)
     return NULL;
@@ -29,13 +30,12 @@ CefRefPtr<CefResourceHandler> SchemeHandlerFactory::Create(
     SetCefForJNIObject(env, jRequest, request.get(), "CefRequest");
 
   jobject jResourceHandler = NULL;
-  JNI_CALL_METHOD(env, jfactory_,
-                  "create",
-                  "(Lorg/cef/browser/CefBrowser;Ljava/lang/String;Lorg/cef/network/CefRequest;)Lorg/cef/handler/CefResourceHandler;",
-                  Object,
-                  jResourceHandler,
-                  GetJNIBrowser(browser),
-                  NewJNIString(env, scheme_name),
+  JNI_CALL_METHOD(env, jfactory_, "create",
+                  "(Lorg/cef/browser/CefBrowser;Lorg/cef/browser/"
+                  "CefFrame;Ljava/lang/String;Lorg/cef/"
+                  "network/CefRequest;)Lorg/cef/handler/CefResourceHandler;",
+                  Object, jResourceHandler, GetJNIBrowser(browser),
+                  GetJNIFrame(env, frame), NewJNIString(env, scheme_name),
                   jRequest);
 
   if (jRequest != NULL)
@@ -43,6 +43,7 @@ CefRefPtr<CefResourceHandler> SchemeHandlerFactory::Create(
 
   if (!jResourceHandler)
     return NULL;
-  CefRefPtr<CefResourceHandler> result = new ResourceHandler(env, jResourceHandler);
+  CefRefPtr<CefResourceHandler> result =
+      new ResourceHandler(env, jResourceHandler);
   return result;
 }

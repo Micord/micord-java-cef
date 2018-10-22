@@ -9,7 +9,10 @@
 #include <jni.h>
 
 #include "include/base/cef_macros.h"
+#include "include/base/cef_scoped_ptr.h"
 #include "include/base/cef_thread_checker.h"
+
+#include "temp_window.h"
 
 class Context {
  public:
@@ -19,11 +22,13 @@ class Context {
   // Returns the singleton instance of this object.
   static Context* GetInstance();
 
-  bool PreInitialize(JNIEnv *env, jobject c);
-  bool Initialize(JNIEnv *env, jobject c,
+  bool PreInitialize(JNIEnv* env, jobject c);
+  bool Initialize(JNIEnv* env,
+                  jobject c,
                   jstring argPathToJavaDLL,
                   jobject appHandler,
                   jobject jsettings);
+  void OnContextInitialized();
   void DoMessageLoopWork();
   void Shutdown();
 
@@ -33,6 +38,8 @@ class Context {
 
   bool external_message_pump_;
   base::ThreadChecker thread_checker_;
+
+  scoped_ptr<TempWindow> temp_window_;
 
   DISALLOW_COPY_AND_ASSIGN(Context);
 };

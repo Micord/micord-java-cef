@@ -3,11 +3,12 @@
 // can be found in the LICENSE file.
 
 #include "jni_util.h"
+
+#include <assert.h>
 #include <jawt.h>
 #include <jawt_md.h>
-#include <assert.h>
 
-HWND GetHwndOfCanvas(jobject canvas, JNIEnv *env) {
+HWND GetHwndOfCanvas(jobject canvas, JNIEnv* env) {
   JAWT awt;
   JAWT_DrawingSurface* ds;
   JAWT_DrawingSurfaceInfo* dsi;
@@ -25,12 +26,17 @@ HWND GetHwndOfCanvas(jobject canvas, JNIEnv *env) {
   assert(ds != NULL);
 
   // Lock the drawing surface.
+  // May fail during shutdown.
   lock = ds->Lock(ds);
-  assert((lock & JAWT_LOCK_ERROR) == 0);
+  if (lock & JAWT_LOCK_ERROR) {
+    return 0;
+  }
 
   // Get the drawing surface info.
   dsi = ds->GetDrawingSurfaceInfo(ds);
   if (dsi == NULL) {
+    // Unlock the drawing surface
+    ds->Unlock(ds);
     return 0;
   }
 

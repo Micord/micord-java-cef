@@ -34,8 +34,8 @@ set(JCEF_SRCS
   CefDragData_N.h
   CefFileDialogCallback_N.cpp
   CefFileDialogCallback_N.h
-  CefGeolocationCallback_N.h
-  CefGeolocationCallback_N.cpp
+  CefFrame_N.cpp
+  CefFrame_N.h
   CefJSDialogCallback_N.h
   CefJSDialogCallback_N.cpp
   CefMenuModel_N.cpp
@@ -95,8 +95,6 @@ set(JCEF_SRCS
   drag_handler.h
   focus_handler.cpp
   focus_handler.h
-  geolocation_handler.cpp
-  geolocation_handler.h
   jcef_version.h
   jni_util.h
   jni_util.cpp
@@ -110,6 +108,8 @@ set(JCEF_SRCS
   load_handler.h
   message_router_handler.cpp
   message_router_handler.h
+  pdf_print_callback.cpp
+  pdf_print_callback.h
   print_handler.cpp
   print_handler.h
   render_handler.cpp
@@ -126,6 +126,7 @@ set(JCEF_SRCS
   scheme_handler_factory.h
   string_visitor.cpp
   string_visitor.h
+  temp_window.h
   url_request_client.cpp
   url_request_client.h
   util.h
@@ -140,8 +141,11 @@ set(JCEF_SRCS
   )
 set(JCEF_SRCS_LINUX
   critical_wait_posix.cpp
+  jni_util_linux.cpp
   signal_restore_posix.cpp
   signal_restore_posix.h
+  temp_window_x11.cc
+  temp_window_x11.h
   util_linux.cpp
   util_posix.cpp
   )
@@ -149,6 +153,8 @@ set(JCEF_SRCS_MACOSX
   critical_wait_posix.cpp
   signal_restore_posix.cpp
   signal_restore_posix.h
+  temp_window_mac.h
+  temp_window_mac.mm
   util_mac.h
   util_mac.mm
   util_posix.cpp
@@ -157,6 +163,8 @@ set(JCEF_SRCS_WINDOWS
   critical_wait_win.cpp
   jni_util_win.cpp
   jcef_dll.rc
+  temp_window_win.cc
+  temp_window_win.h
   util_win.cpp
   )
 APPEND_PLATFORM_SOURCES(JCEF_SRCS)
@@ -168,7 +176,6 @@ set(JCEF_HELPER_SRCS
   util.h
   )
 set(JCEF_HELPER_SRCS_LINUX
-  util_linux.cpp
   util_posix.cpp
   )
 set(JCEF_HELPER_SRCS_MACOSX
@@ -190,7 +197,8 @@ source_group(jcef FILES ${JCEF_HELPER_SRCS})
 set(JCEF_TARGET "jcef")
 if(OS_MACOSX)
   set(JCEF_APP_NAME "jcef_app")
-  set(JCEF_HELPER_TARGET "jcef Helper")
+  set(JCEF_HELPER_TARGET "jcef_Helper")
+  set(JCEF_HELPER_OUTPUT_NAME "jcef Helper")
 else()
   set(JCEF_HELPER_TARGET "jcef_helper")
 endif()
@@ -228,13 +236,14 @@ if(OS_LINUX)
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
 
   # Compile flags specific to the JCEF library target.
-  # -DUSING_JAVA          = Add the USING_JAVA define.
+  # USING_JAVA          = Add the USING_JAVA define.
+  target_compile_definitions(${JCEF_TARGET} PRIVATE "USING_JAVA")
+
   # -fvisibility=default  = Give default visibility to declarations that are not explicitly marked as visible.
   #                         Necessary so that JNI symbols are properly exported when building with GCC.
   #                         Related discussion: http://mail.openjdk.java.net/pipermail/core-libs-dev/2013-February/014446.html
   #                         Test symbol export with: nm -D --defined-only libjcef.so | grep Java
   set_target_properties(${JCEF_TARGET} PROPERTIES
-    COMPILE_FLAGS -DUSING_JAVA
     COMPILE_FLAGS -fvisibility=default
     )
 
@@ -267,9 +276,17 @@ endif()
 #
 
 if(OS_MACOSX)
+  # Avoid CMP0042 policy errors.
+  set(CMAKE_MACOSX_RPATH 1)
+
+  # Avoid CMP0068 policy errors.
+  if(POLICY CMP0068)
+    cmake_policy(SET CMP0068 NEW)
+  endif()
+
   # Output paths for the app bundles.
   set(JCEF_APP "${CEF_TARGET_OUT_DIR}/${JCEF_APP_NAME}.app")
-  set(JCEF_HELPER_APP "${CEF_TARGET_OUT_DIR}/${JCEF_HELPER_TARGET}.app")
+  set(JCEF_HELPER_APP "${CEF_TARGET_OUT_DIR}/${JCEF_HELPER_OUTPUT_NAME}.app")
 
   # Variable referenced from Info.plist files.
   set(PRODUCT_NAME "${JCEF_APP_NAME}")
@@ -281,6 +298,7 @@ if(OS_MACOSX)
   target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
   set_target_properties(${JCEF_HELPER_TARGET} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/resources/jcef-Info.plist
+    OUTPUT_NAME ${JCEF_HELPER_OUTPUT_NAME}
     )
 
   # Fix the framework rpath in the helper executable.
@@ -294,10 +312,8 @@ if(OS_MACOSX)
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
 
   # Compile flags specific to the JCEF library target.
-  # -DUSING_JAVA          = Add the USING_JAVA define.
-  set_target_properties(${JCEF_TARGET} PROPERTIES
-    COMPILE_FLAGS -DUSING_JAVA
-    )
+  # USING_JAVA          = Add the USING_JAVA define.
+  target_compile_definitions(${JCEF_TARGET} PRIVATE "USING_JAVA")
 
   # Name and location of the JCEF library in the main app bundle.
   set(JCEF_TARGET_LIBRARY "lib${JCEF_TARGET}.dylib")
@@ -318,7 +334,7 @@ if(OS_MACOSX)
     # Copy the helper app bundle into the main app bundle.
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${JCEF_HELPER_APP}"
-            "${JCEF_APP}/Contents/Frameworks/${JCEF_HELPER_TARGET}.app"
+            "${JCEF_APP}/Contents/Frameworks/${JCEF_HELPER_OUTPUT_NAME}.app"
     # Copy the CEF framework into the main app bundle.
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CEF_BINARY_DIR}/Chromium Embedded Framework.framework"
@@ -354,10 +370,8 @@ if(OS_WINDOWS)
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
 
   # Compile flags specific to the JCEF library target.
-  # -DUSING_JAVA          = Add the USING_JAVA define.
-  set_target_properties(${JCEF_TARGET} PROPERTIES
-    COMPILE_FLAGS -DUSING_JAVA
-    )
+  # USING_JAVA          = Add the USING_JAVA define.
+  target_compile_definitions(${JCEF_TARGET} PRIVATE "USING_JAVA")
 
   # Add the custom manifest files to the DLL and helper EXE.
   ADD_WINDOWS_MANIFEST("${CMAKE_CURRENT_SOURCE_DIR}" "${JCEF_TARGET}" "dll")
