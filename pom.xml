@@ -6,7 +6,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.26_cg_6</version>
+  <version>3.27-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <properties>
