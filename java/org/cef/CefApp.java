@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * Exposes static methods for managing the global CEF context.
  */
 public class CefApp extends CefAppHandlerAdapter {
-  private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger LOG = LoggerFactory.getLogger(CefApp.class);
     public final class CefVersion {
         public final int JCEF_COMMIT_NUMBER;
 
@@ -167,15 +167,14 @@ public class CefApp extends CefAppHandlerAdapter {
                         throw new IllegalStateException("Failed to pre-initialize native code");
                 }
             };
-            if (SwingUtilities.isEventDispatchThread())
+            if (SwingUtilities.isEventDispatchThread()) {
         LOG.debug("CefApp: just run");
                 r.run();
-      }
-      else {
+            } else {
         LOG.debug("CefApp: run & wait");
                 SwingUtilities.invokeAndWait(r);
         LOG.debug("CefApp: run & wait completed");
-      }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -565,3 +564,4 @@ public class CefApp extends CefAppHandlerAdapter {
     private final native boolean N_ClearSchemeHandlerFactories();
     private final static native void N_InitXlibForMultithreading();
 }
+

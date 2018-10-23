@@ -21,7 +21,7 @@ import java.awt.Rectangle;
 import java.nio.ByteBuffer;
 
 import com.jogamp.nativewindow.NativeSurface;
-import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
@@ -41,7 +41,7 @@ import org.cef.handler.CefRenderHandler;
  */
 class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     private CefRenderer renderer_;
-    private GLCanvas canvas_;
+    private GLJPanel canvas_;
     private long window_handle_ = 0;
     private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
     private Point screenPoint_ = new Point(0, 0);
@@ -99,7 +99,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     private void createGLCanvas() {
         GLProfile glprofile = GLProfile.getMaxFixedFunc(true);
         GLCapabilities glcapabilities = new GLCapabilities(glprofile);
-        canvas_ = new GLCanvas(glcapabilities) {
+        canvas_ = new GLJPanel(glcapabilities) {
             @Override
             public void paint(Graphics g) {
                 createBrowserIfRequired(true);
@@ -174,7 +174,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
         canvas_.addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                sendMouseWheelEvent(e);
+                sendMouseWheelEvent(new MouseWheelEvent((Component)e.getSource(), e.getID(), e.getWhen(), e.getModifiers(), e.getX(), e.getY(), 0, 0, e.getClickCount(), e.isPopupTrigger(), e.getScrollType(), e.getScrollAmount()*-64, e.getWheelRotation(), e.getPreciseWheelRotation()));
             }
         });
 

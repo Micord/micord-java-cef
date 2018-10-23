@@ -657,7 +657,7 @@ bool CallJNIMethodC_V(JNIEnv* env,
                       jclass cls,
                       jobject obj,
                       const char* method_name,
-                      wchar_t* value) {
+                      char* value) {
   jmethodID methodID = env->GetMethodID(cls, method_name, "()C");
   if (methodID) {
     *value = env->CallCharMethod(obj, methodID);
