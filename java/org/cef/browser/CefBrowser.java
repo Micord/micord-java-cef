@@ -374,5 +374,5 @@ public interface CefBrowser {
    * amount
    * @param scrollAmount number scroll in pixels
    */
-  //void setScrollAmount(final int scrollAmount);
+  void setScrollAmount(final int scrollAmount);
 }

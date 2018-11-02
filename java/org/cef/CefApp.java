@@ -143,6 +143,8 @@ public class CefApp extends CefAppHandlerAdapter {
       LOG.debug("CefApp: Start load libs");
       System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
       LOG.debug("CefApp: jawt.dll load finished ");
+      System.load(library_path + "chrome_elf.dll");
+      System.load(library_path + "libcef.dll");
       LOG.debug("CefApp: libcef.dll load finished ");
         } else if (OS.isLinux()) {
             System.loadLibrary("cef");
