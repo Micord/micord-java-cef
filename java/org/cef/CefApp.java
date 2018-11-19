@@ -24,7 +24,8 @@ import org.slf4j.LoggerFactory;
  * Exposes static methods for managing the global CEF context.
  */
 public class CefApp extends CefAppHandlerAdapter {
-  private static final Logger LOG = LoggerFactory.getLogger(CefApp.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CefApp.class);
+
     public final class CefVersion {
         public final int JCEF_COMMIT_NUMBER;
 
@@ -137,25 +138,25 @@ public class CefApp extends CefAppHandlerAdapter {
     private CefApp(String[] args, CefSettings settings) throws UnsatisfiedLinkError {
         super(args);
         if (settings != null) settings_ = settings.clone();
-    String library_path = getJcefLibPath();
-      LOG.debug("CefApp: Get libs path");
+        String library_path = getJcefLibPath();
+        LOG.debug("CefApp: Get libs path");
         if (OS.isWindows()) {
-      LOG.debug("CefApp: Start load libs");
-      System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
-      LOG.debug("CefApp: jawt.dll load finished ");
-      System.load(library_path + "chrome_elf.dll");
-      System.load(library_path + "libcef.dll");
-      LOG.debug("CefApp: libcef.dll load finished ");
+            LOG.debug("CefApp: Start load libs");
+            System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
+            LOG.debug("CefApp: jawt.dll load finished ");
+            System.load(library_path + "chrome_elf.dll");
+            System.load(library_path + "libcef.dll");
+            LOG.debug("CefApp: libcef.dll load finished ");
         } else if (OS.isLinux()) {
             System.loadLibrary("cef");
-    } else if (OS.isMacintosh()) {
-      System.load(library_path + "/jcef_app.app/Contents/Java/libjcef.dylib");
+        } else if (OS.isMacintosh()) {
+            System.load(library_path + "/jcef_app.app/Contents/Java/libjcef.dylib");
         }
-    System.load(library_path + "jcef.dll");
-    LOG.debug("CefApp: jcef.dll load finished ");
+        System.load(library_path + "jcef.dll");
+        LOG.debug("CefApp: jcef.dll load finished ");
         if (appHandler_ == null) {
             appHandler_ = this;
-      LOG.debug("CefApp: appHandler initialized");
+            LOG.debug("CefApp: appHandler initialized");
         }
 
         // Execute on the AWT event dispatching thread.
@@ -164,18 +165,18 @@ public class CefApp extends CefAppHandlerAdapter {
                 @Override
                 public void run() {
                     // Perform native pre-initialization.
-          LOG.debug("CefApp: Start run CefApp");
+                    LOG.debug("CefApp: Start run CefApp");
                     if (!N_PreInitialize())
                         throw new IllegalStateException("Failed to pre-initialize native code");
                 }
             };
             if (SwingUtilities.isEventDispatchThread()) {
-        LOG.debug("CefApp: just run");
+                LOG.debug("CefApp: just run");
                 r.run();
             } else {
-        LOG.debug("CefApp: run & wait");
+                LOG.debug("CefApp: run & wait");
                 SwingUtilities.invokeAndWait(r);
-        LOG.debug("CefApp: run & wait completed");
+                LOG.debug("CefApp: run & wait completed");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -566,4 +567,3 @@ public class CefApp extends CefAppHandlerAdapter {
     private final native boolean N_ClearSchemeHandlerFactories();
     private final static native void N_InitXlibForMultithreading();
 }
-
