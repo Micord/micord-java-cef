@@ -29,15 +29,11 @@ bool WebPluginInfoVisitor::Visit(CefRefPtr<CefWebPluginInfo> info,
   SetCefForJNIObject(env, jinfo, info.get(), "CefWebPluginInfo");
 
   jboolean jresult = JNI_FALSE;
-  JNI_CALL_METHOD(env, jvisitor_,
-                       "visit",
-                       "(Lorg/cef/network/CefWebPluginInfo;II)Z",
-                       Boolean,
-                       jresult,
-                       jinfo,
-                       (jint)count,
-                       (jint)total);
+  JNI_CALL_METHOD(env, jvisitor_, "visit",
+                  "(Lorg/cef/network/CefWebPluginInfo;II)Z", Boolean, jresult,
+                  jinfo, (jint)count, (jint)total);
 
   SetCefForJNIObject<CefWebPluginInfo>(env, jinfo, NULL, "CefWebPluginInfo");
+  env->DeleteLocalRef(jinfo);
   return jresult != JNI_FALSE;
 }

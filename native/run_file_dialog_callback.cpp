@@ -25,9 +25,9 @@ void RunFileDialogCallback::OnFileDialogDismissed(
   JNIEnv* env = GetJNIEnv();
   if (!env)
     return;
-  JNI_CALL_VOID_METHOD(env, jcallback_,
-                       "onFileDialogDismissed",
-                       "(ILjava/util/Vector;)V",
-                       selected_accept_filter,
-                       NewJNIStringVector(env, file_paths));
+  jobject jfile_paths = NewJNIStringVector(env, file_paths);
+  JNI_CALL_VOID_METHOD(env, jcallback_, "onFileDialogDismissed",
+                       "(ILjava/util/Vector;)V", selected_accept_filter,
+                       jfile_paths);
+  env->DeleteLocalRef(jfile_paths);
 }

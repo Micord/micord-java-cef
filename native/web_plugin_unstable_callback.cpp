@@ -7,7 +7,8 @@
 #include "jni_util.h"
 #include "util.h"
 
-WebPluginUnstableCallback::WebPluginUnstableCallback(JNIEnv* env, jobject jcallback) {
+WebPluginUnstableCallback::WebPluginUnstableCallback(JNIEnv* env,
+                                                     jobject jcallback) {
   jcallback_ = env->NewGlobalRef(jcallback);
 }
 
@@ -21,9 +22,8 @@ void WebPluginUnstableCallback::IsUnstable(const CefString& path,
   JNIEnv* env = GetJNIEnv();
   if (!env)
     return;
-  JNI_CALL_VOID_METHOD(env, jcallback_,
-                       "isUnstable",
-                       "(Ljava/lang/String;Z)V",
-                       NewJNIString(env, path),
-                       (unstable ? JNI_TRUE : JNI_FALSE));
+  jstring jpath = NewJNIString(env, path);
+  JNI_CALL_VOID_METHOD(env, jcallback_, "isUnstable", "(Ljava/lang/String;Z)V",
+                       jpath, (unstable ? JNI_TRUE : JNI_FALSE));
+  env->DeleteLocalRef(jpath);
 }

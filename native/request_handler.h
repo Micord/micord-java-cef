@@ -19,6 +19,7 @@ class RequestHandler : public CefRequestHandler {
   virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
                               CefRefPtr<CefFrame> frame,
                               CefRefPtr<CefRequest> request,
+                              bool user_gesture,
                               bool is_redirect) OVERRIDE;
 
   virtual ReturnValue OnBeforeResourceLoad(
@@ -37,6 +38,18 @@ class RequestHandler : public CefRequestHandler {
                                   CefRefPtr<CefRequest> request,
                                   CefRefPtr<CefResponse> response,
                                   CefString& new_url) OVERRIDE;
+
+  virtual bool OnResourceResponse(CefRefPtr<CefBrowser> browser,
+                                  CefRefPtr<CefFrame> frame,
+                                  CefRefPtr<CefRequest> request,
+                                  CefRefPtr<CefResponse> response) OVERRIDE;
+
+  virtual void OnResourceLoadComplete(CefRefPtr<CefBrowser> browser,
+                                      CefRefPtr<CefFrame> frame,
+                                      CefRefPtr<CefRequest> request,
+                                      CefRefPtr<CefResponse> response,
+                                      URLRequestStatus status,
+                                      int64 received_content_length) OVERRIDE;
 
   virtual bool GetAuthCredentials(CefRefPtr<CefBrowser> browser,
                                   CefRefPtr<CefFrame> frame,
@@ -65,7 +78,7 @@ class RequestHandler : public CefRequestHandler {
 
   virtual void OnPluginCrashed(CefRefPtr<CefBrowser> browser,
                                const CefString& plugin_path) OVERRIDE;
-                                  
+
   virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
                                          TerminationStatus status) OVERRIDE;
 

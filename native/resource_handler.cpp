@@ -26,23 +26,24 @@ bool ResourceHandler::ProcessRequest(CefRefPtr<CefRequest> request,
   if (!jrequest)
     return false;
   jobject jcallback = NewJNIObject(env, "org/cef/callback/CefCallback_N");
-  if (!jcallback)
+  if (!jcallback) {
+    env->DeleteLocalRef(jrequest);
     return false;
+  }
   SetCefForJNIObject(env, jrequest, request.get(), "CefRequest");
   SetCefForJNIObject(env, jcallback, callback.get(), "CefCallback");
 
   jboolean result = JNI_FALSE;
-  JNI_CALL_METHOD(env, jhandler_, 
-                  "processRequest",
-                  "(Lorg/cef/network/CefRequest;Lorg/cef/callback/CefCallback;)Z",
-                  Boolean,
-                  result,
-                  jrequest,
-                  jcallback);
+  JNI_CALL_METHOD(
+      env, jhandler_, "processRequest",
+      "(Lorg/cef/network/CefRequest;Lorg/cef/callback/CefCallback;)Z", Boolean,
+      result, jrequest, jcallback);
   if (result == JNI_FALSE) {
     SetCefForJNIObject<CefRequest>(env, jrequest, NULL, "CefRequest");
     SetCefForJNIObject<CefCallback>(env, jcallback, NULL, "CefCallback");
   }
+  env->DeleteLocalRef(jcallback);
+  env->DeleteLocalRef(jrequest);
   return (result != JNI_FALSE);
 }
 
@@ -57,23 +58,29 @@ void ResourceHandler::GetResponseHeaders(CefRefPtr<CefResponse> response,
   if (!jresponse)
     return;
   jobject jintRef = NewJNIIntRef(env, response_length);
-  if (!jintRef)
+  if (!jintRef) {
+    env->DeleteLocalRef(jresponse);
     return;
+  }
   jobject jstringRef = NewJNIStringRef(env, redirectUrl);
-  if (!jstringRef)
+  if (!jstringRef) {
+    env->DeleteLocalRef(jintRef);
+    env->DeleteLocalRef(jresponse);
     return;
+  }
 
   SetCefForJNIObject(env, jresponse, response.get(), "CefResponse");
 
-  JNI_CALL_VOID_METHOD(env, jhandler_,
-                       "getResponseHeaders",
-                       "(Lorg/cef/network/CefResponse;Lorg/cef/misc/IntRef;Lorg/cef/misc/StringRef;)V",
-                       jresponse,
-                       jintRef,
-                       jstringRef);
+  JNI_CALL_VOID_METHOD(env, jhandler_, "getResponseHeaders",
+                       "(Lorg/cef/network/CefResponse;Lorg/cef/misc/"
+                       "IntRef;Lorg/cef/misc/StringRef;)V",
+                       jresponse, jintRef, jstringRef);
   response_length = GetJNIIntRef(env, jintRef);
   redirectUrl = GetJNIStringRef(env, jstringRef);
   SetCefForJNIObject<CefResponse>(env, jresponse, NULL, "CefResponse");
+  env->DeleteLocalRef(jstringRef);
+  env->DeleteLocalRef(jintRef);
+  env->DeleteLocalRef(jresponse);
   return;
 }
 
@@ -89,22 +96,18 @@ bool ResourceHandler::ReadResponse(void* data_out,
   if (!jintRef)
     return false;
   jobject jcallback = NewJNIObject(env, "org/cef/callback/CefCallback_N");
-  if (!jcallback)
+  if (!jcallback) {
+    env->DeleteLocalRef(jintRef);
     return false;
+  }
   SetCefForJNIObject(env, jcallback, callback.get(), "CefCallback");
 
   jbyteArray jbytes = env->NewByteArray(bytes_to_read);
   jboolean jresult = JNI_FALSE;
 
-  JNI_CALL_METHOD(env, jhandler_,
-                  "readResponse",
+  JNI_CALL_METHOD(env, jhandler_, "readResponse",
                   "([BILorg/cef/misc/IntRef;Lorg/cef/callback/CefCallback;)Z",
-                  Boolean,
-                  jresult,
-                  jbytes,
-                  bytes_to_read,
-                  jintRef,
-                  jcallback);
+                  Boolean, jresult, jbytes, bytes_to_read, jintRef, jcallback);
   bool result = (jresult != JNI_FALSE);
   bytes_read = GetJNIIntRef(env, jintRef);
   if (!result || bytes_read > 0) {
@@ -115,9 +118,12 @@ bool ResourceHandler::ReadResponse(void* data_out,
     SetCefForJNIObject<CefCallback>(env, jcallback, NULL, "CefCallback");
   }
   jbyte* jbyte = env->GetByteArrayElements(jbytes, NULL);
-  memmove(data_out, jbyte, (bytes_read < bytes_to_read ? bytes_read : bytes_to_read));
+  memmove(data_out, jbyte,
+          (bytes_read < bytes_to_read ? bytes_read : bytes_to_read));
   env->ReleaseByteArrayElements(jbytes, jbyte, JNI_ABORT);
   env->DeleteLocalRef(jbytes);
+  env->DeleteLocalRef(jintRef);
+  env->DeleteLocalRef(jcallback);
   return result;
 }
 
@@ -127,11 +133,8 @@ bool ResourceHandler::CanGetCookie(const CefCookie& cookie) {
     return false;
 
   jboolean result = JNI_FALSE;
-  JNI_CALL_METHOD(env, jhandler_,
-                  "canGetCookie",
-                  "(Lorg/cef/network/CefCookie;)Z",
-                  Boolean,
-                  result,
+  JNI_CALL_METHOD(env, jhandler_, "canGetCookie",
+                  "(Lorg/cef/network/CefCookie;)Z", Boolean, result,
                   NewJNICookie(env, cookie));
   return (result != JNI_FALSE);
 }
@@ -142,11 +145,8 @@ bool ResourceHandler::CanSetCookie(const CefCookie& cookie) {
     return false;
 
   jboolean result = JNI_FALSE;
-  JNI_CALL_METHOD(env, jhandler_,
-                  "canSetCookie",
-                  "(Lorg/cef/network/CefCookie;)Z",
-                  Boolean,
-                  result,
+  JNI_CALL_METHOD(env, jhandler_, "canSetCookie",
+                  "(Lorg/cef/network/CefCookie;)Z", Boolean, result,
                   NewJNICookie(env, cookie));
   return (result != JNI_FALSE);
 }
