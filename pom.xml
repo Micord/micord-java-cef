@@ -4,7 +4,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.27.6</version>
+  <version>3.28</version>
   <packaging>bundle</packaging>
 
   <properties>
@@ -159,7 +159,7 @@
                 <artifactItem>
                   <groupId>ru.cg.webbrowser</groupId>
                   <artifactId>java-cef-bin-third-win</artifactId>
-                  <version>3.27.4</version>
+                  <version>3.28-SNAPSHOT</version>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.basedir}/third_party/javaFx</outputDirectory>
                   <includes>**/*.dll</includes>
