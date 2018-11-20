@@ -159,7 +159,7 @@
                 <artifactItem>
                   <groupId>ru.cg.webbrowser</groupId>
                   <artifactId>java-cef-bin-third-win</artifactId>
-                  <version>3.28-SNAPSHOT</version>
+                  <version>3.28</version>
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.basedir}/third_party/javaFx</outputDirectory>
                   <includes>**/*.dll</includes>
