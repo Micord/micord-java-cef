@@ -139,7 +139,7 @@
         <configuration>
           <filesets>
             <fileset>
-              <directory>${project.basedir}/third_party/javaFx</directory>
+              <directory>${project.basedir}/jcef_build</directory>
             </fileset>
           </filesets>
         </configuration>
@@ -161,7 +161,7 @@
                   <artifactId>java-cef-bin-third-win</artifactId>
                   <version>3.28</version>
                   <overWrite>true</overWrite>
-                  <outputDirectory>${project.basedir}/third_party/javaFx</outputDirectory>
+                  <outputDirectory>${project.basedir}/jcef_build/native/release</outputDirectory>
                   <includes>**/*.dll</includes>
                 </artifactItem>
               </artifactItems>
