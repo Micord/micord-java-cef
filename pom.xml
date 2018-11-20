@@ -119,6 +119,7 @@
           <pullDevelop>true</pullDevelop>
           <pullMaster>true</pullMaster>
           <noDeploy>true</noDeploy>
+          <allowUntracked>true</allowUntracked>
         </configuration>
       </plugin>
       <plugin>
