@@ -89,6 +89,11 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>external.atlassian.jgitflow</groupId>
+          <artifactId>jgitflow-maven-plugin</artifactId>
+          <version>1.0-m5.1</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>
         </plugin>
@@ -120,13 +125,13 @@
       <plugin>
         <groupId>external.atlassian.jgitflow</groupId>
         <artifactId>jgitflow-maven-plugin</artifactId>
-        <version>1.0-m5.1</version>
         <configuration>
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <pullDevelop>true</pullDevelop>
           <pullMaster>true</pullMaster>
           <noDeploy>true</noDeploy>
           <allowUntracked>true</allowUntracked>
+          <useReleaseProfile>false</useReleaseProfile>
         </configuration>
       </plugin>
       <plugin>
