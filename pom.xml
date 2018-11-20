@@ -4,7 +4,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.27.4</version>
+  <version>3.27.5</version>
   <packaging>bundle</packaging>
 
   <properties>
@@ -89,6 +89,15 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>external.atlassian.jgitflow</groupId>
+          <artifactId>jgitflow-maven-plugin</artifactId>
+          <version>1.0-m5.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.3</version>
@@ -101,6 +110,11 @@
           </configuration>
         </plugin>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
           <version>3.0.1</version>
@@ -111,14 +125,49 @@
       <plugin>
         <groupId>external.atlassian.jgitflow</groupId>
         <artifactId>jgitflow-maven-plugin</artifactId>
-        <version>1.0-m5.1</version>
         <configuration>
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <pullDevelop>true</pullDevelop>
           <pullMaster>true</pullMaster>
           <noDeploy>true</noDeploy>
           <allowUntracked>true</allowUntracked>
+          <useReleaseProfile>false</useReleaseProfile>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${project.basedir}/third_party/javaFx</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>ru.cg.webbrowser</groupId>
+                  <artifactId>java-cef-bin-third-win</artifactId>
+                  <version>3.27.4</version>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.basedir}/third_party/javaFx</outputDirectory>
+                  <includes>**/*.dll</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
