@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.27.2</version>
+  <version>3.27.4</version>
   <packaging>bundle</packaging>
 
   <properties>
@@ -21,14 +19,14 @@
 
   <repositories>
     <repository>
-      <id>central</id>
+      <id>mikord</id>
       <name>CG Repo</name>
       <url>http://artifactory.cg.ru/artifactory/all</url>
     </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>central</id>
+      <id>mikord</id>
       <name>CG plugins-releases</name>
       <url>http://artifactory.cg.ru/artifactory/all</url>
     </pluginRepository>
@@ -36,12 +34,12 @@
 
   <distributionManagement>
     <repository>
-      <id>central</id>
+      <id>mikord</id>
       <name>ASD CG Release repository</name>
       <url>http://artifactory.cg.ru/artifactory/libs-releases-local</url>
     </repository>
     <snapshotRepository>
-      <id>snapshots</id>
+      <id>mikord</id>
       <name>ASD CG Snapshots repository</name>
       <url>http://artifactory.cg.ru/artifactory/libs-snapshots-local</url>
     </snapshotRepository>
@@ -110,6 +108,18 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>external.atlassian.jgitflow</groupId>
+        <artifactId>jgitflow-maven-plugin</artifactId>
+        <version>1.0-m5.1</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <pullDevelop>true</pullDevelop>
+          <pullMaster>true</pullMaster>
+          <noDeploy>true</noDeploy>
+          <allowUntracked>true</allowUntracked>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
