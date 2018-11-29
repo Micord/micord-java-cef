@@ -33,6 +33,7 @@
 
 #if defined(OS_WIN)
 #undef MOUSE_MOVED
+#include "java_key_code.h"
 #endif
 
 namespace {
@@ -1474,11 +1475,12 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent(JNIEnv* env,
   JNI_STATIC_DEFINE_INT(env, cls, KEY_RELEASED);
   JNI_STATIC_DEFINE_INT(env, cls, KEY_TYPED);
 
-  int event_type, modifiers;
+  int event_type, modifiers, key_code;
   wchar_t key_char;
   if (!CallJNIMethodI_V(env, cls, key_event, "getID", &event_type) ||
       !CallJNIMethodC_V(env, cls, key_event, "getKeyChar", &key_char) ||
-      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers)) {
+      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers) ||
+	  !CallJNIMethodI_V(env, cls, key_event, "getKeyCode", &key_code)) {
     return;
   }
 
@@ -1654,7 +1656,54 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent(JNIEnv* env,
 
   if (event_type == JNI_STATIC(KEY_PRESSED)) {
 #if defined(OS_WIN)
-    cef_event.windows_key_code = VkCode;
+	  if (key_code == JVK_COMMA){
+		  key_code = VK_OEM_COMMA;
+	  }
+	  else if (key_code == JVK_MINUS) {
+		  key_code = VK_OEM_MINUS;
+	  }
+	  else if (key_code == JVK_PERIOD) {
+		  key_code = VK_OEM_PERIOD;
+	  }
+	  else if (key_code == JVK_SLASH) {
+		  key_code = VK_OEM_2;
+	  }
+	  else if (key_code == JVK_SEMICOLON) {
+		  key_code = VK_OEM_1;
+	  }
+	  else if (key_code == JVK_EQUALS) {
+		  key_code = VK_OEM_PLUS;
+	  }
+	  else if (key_code == JVK_OPEN_BKT) {
+		  key_code = VK_OEM_4;
+	  }
+	  else if (key_code == JVK_BACKSLASH) {
+		  key_code = VK_OEM_5;
+	  }
+	  else if (key_code == JVK_CLOSE_BKT) {
+		  key_code = VK_OEM_6;
+	  }
+	  else if (key_code == JVK_DELETE) {
+		  key_code = VK_DELETE;
+	  }
+	  else if (key_code == JVK_PRINT_SCREEN) {
+		  key_code = VK_PRINT;
+	  }
+	  else if (key_code == JVK_INSERT) {
+		  key_code = VK_INSERT;
+	  }
+	  else if (key_code == JVK_WIN) {
+		  key_code = VK_LWIN;
+	  }
+	  else if (key_code == JVK_NUM_ENTER) {
+		  key_code = JVK_NUM_ENTER;
+	  }
+	  cef_event.windows_key_code = key_code;
+	  cef_event.character = key_code;
+	  cef_event.unmodified_character = key_code;
+	cef_event.windows_key_code = key_code;
+	cef_event.character = key_code;
+	cef_event.unmodified_character = key_code;
 #endif
     cef_event.type = KEYEVENT_RAWKEYDOWN;
   } else if (event_type == JNI_STATIC(KEY_RELEASED)) {
