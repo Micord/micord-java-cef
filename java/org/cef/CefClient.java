@@ -411,6 +411,9 @@ public class CefClient extends CefClientHandler
     @Override
     public void onGotFocus(CefBrowser browser) {
         if (browser == null) return;
+        if (focusedBrowser_ == browser) { //TODO remove WEBBPMNEXT-5646 issue fix when it will be fixed in upstream.
+            return;
+        }
 
         focusedBrowser_ = browser;
         browser.setFocus(true);
@@ -514,6 +517,12 @@ public class CefClient extends CefClientHandler
             browser_.put(identifier, browser);
         }
         if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterCreated(browser);
+    }
+
+    @Override
+    public void onAfterParentChanged(CefBrowser browser) {
+        if (browser == null) return;
+        if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterParentChanged(browser);
     }
 
     @Override
