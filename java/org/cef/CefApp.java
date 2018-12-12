@@ -533,6 +533,7 @@ public class CefApp extends CefAppHandlerAdapter {
      */
     public static final boolean startup() {
         if (OS.isLinux() || OS.isMacintosh()) {
+            String library_path = System.getProperty("java.library.path");
             System.load(library_path + "jcef");
             return N_Startup();
         }
