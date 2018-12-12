@@ -147,13 +147,15 @@ public class CefApp extends CefAppHandlerAdapter {
             System.load(library_path + "chrome_elf.dll");
             System.load(library_path + "libcef.dll");
             LOG.debug("CefApp: libcef.dll load finished ");
+            // Other platforms load this library in CefApp.startup().
+            System.load(library_path + "jcef.dll");
+            LOG.debug("CefApp: jcef.dll load finished ");
+
         } else if (OS.isLinux()) {
             System.loadLibrary("cef");
         } else if (OS.isMacintosh()) {
             System.load(library_path + "/jcef_app.app/Contents/Java/libjcef.dylib");
         }
-        System.load(library_path + "jcef.dll");
-        LOG.debug("CefApp: jcef.dll load finished ");
         if (appHandler_ == null) {
             appHandler_ = this;
             LOG.debug("CefApp: appHandler initialized");
@@ -525,13 +527,16 @@ public class CefApp extends CefAppHandlerAdapter {
     }
 
     /**
-     * On Linux this method must be called before ANY other call to Xlib from
-     * this process, including calls from the Java runtime.
+     * This method must be called at the beginning of the main() method to perform platform-
+     * specific startup initialization. On Linux this initializes Xlib multithreading and on
+     * macOS this dynamically loads the CEF framework.
      */
-    public static final void initXlibForMultithreading() {
-        if (OS.isLinux()) {
-            N_InitXlibForMultithreading();
+    public static final boolean startup() {
+        if (OS.isLinux() || OS.isMacintosh()) {
+            System.load(library_path + "jcef");
+            return N_Startup();
         }
+        return true;
     }
 
     /**
@@ -556,6 +561,7 @@ public class CefApp extends CefAppHandlerAdapter {
         return library_path;
     }
 
+    private final static native boolean N_Startup();
     private final native boolean N_PreInitialize();
     private final native boolean N_Initialize(
             String pathToJavaDLL, CefAppHandler appHandler, CefSettings settings);
@@ -565,5 +571,4 @@ public class CefApp extends CefAppHandlerAdapter {
     private final native boolean N_RegisterSchemeHandlerFactory(
             String schemeName, String domainName, CefSchemeHandlerFactory factory);
     private final native boolean N_ClearSchemeHandlerFactories();
-    private final static native void N_InitXlibForMultithreading();
 }
