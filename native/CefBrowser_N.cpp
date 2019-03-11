@@ -921,6 +921,9 @@ jboolean create(JNIEnv* env,
     CefWindowHandle parent = TempWindow::GetWindowHandle();
     if (canvas != NULL) {
       parent = GetHwndOfCanvas(canvas, env);
+    } else {
+      // Do not activate hidden browser windows on creation.
+      windowInfo.ex_style |= WS_EX_NOACTIVATE;
     }
     RECT winRect = {0, 0, rect.width, rect.height};
     windowInfo.SetAsChild(parent, winRect);
@@ -1476,7 +1479,7 @@ Java_org_cef_browser_CefBrowser_1N_N_1SendKeyEvent(JNIEnv* env,
   JNI_STATIC_DEFINE_INT(env, cls, KEY_TYPED);
 
   int event_type, modifiers, key_code;
-  wchar_t key_char;
+  char16 key_char;
   if (!CallJNIMethodI_V(env, cls, key_event, "getID", &event_type) ||
       !CallJNIMethodC_V(env, cls, key_event, "getKeyChar", &key_char) ||
       !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers) ||
@@ -1964,3 +1967,15 @@ Java_org_cef_browser_CefBrowser_1N_N_1SetParent(JNIEnv* env,
   }
 #endif
 }
+
+JNIEXPORT void JNICALL
+Java_org_cef_browser_CefBrowser_1N_N_1NotifyMoveOrResizeStarted(JNIEnv* env,
+                                                                jobject obj) {
+#if (defined(OS_WIN) || defined(OS_LINUX))
+  CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
+  if (!browser->GetHost()->IsWindowRenderingDisabled()) {
+    browser->GetHost()->NotifyMoveOrResizeStarted();
+  }
+#endif
+}
+

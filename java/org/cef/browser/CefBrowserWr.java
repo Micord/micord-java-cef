@@ -55,6 +55,9 @@ class CefBrowserWr extends CefBrowser_N {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    if (isClosed())
+                        return;
+
                     boolean hasCreatedUI = createBrowserIfRequired(true);
 
                     if (hasCreatedUI) {
@@ -270,6 +273,7 @@ class CefBrowserWr extends CefBrowser_N {
             @Override
             public void ancestorMoved(HierarchyEvent e) {
                 doUpdate();
+                notifyMoveOrResizeStarted();
             }
         });
         component_.addHierarchyListener(new HierarchyListener() {
