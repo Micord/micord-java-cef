@@ -357,11 +357,4 @@ public interface CefBrowser {
      * @param word replace selected word with this word.
      */
     public void replaceMisspelling(String word);
-
-  /**
-   * Sets custom scroll amount multiplier which allows to redefine default mouse scroll
-   * amount
-   * @param scrollAmount number scroll in pixels
-   */
-  void setScrollAmount(final int scrollAmount);
 }
