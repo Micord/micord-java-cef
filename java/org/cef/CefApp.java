@@ -55,7 +55,7 @@ public class CefApp extends CefAppHandlerAdapter {
         }
 
         public String getJcefVersion() {
-            return CEF_VERSION_MAJOR + "." + CEF_VERSION_MINOR + "." + CEF_VERSION_PATCH 
+            return CEF_VERSION_MAJOR + "." + CEF_VERSION_MINOR + "." + CEF_VERSION_PATCH
                     + "." + JCEF_COMMIT_NUMBER;
         }
 
@@ -147,13 +147,13 @@ public class CefApp extends CefAppHandlerAdapter {
         LOG.debug("CefApp: Get libs path");
         if (OS.isWindows()) {
             LOG.debug("CefApp: Start load libs");
-            System.load(System.getProperty("java.home") + "\\bin\\jawt.dll");
+            System.loadLibrary("jawt");
             LOG.debug("CefApp: jawt.dll load finished ");
-            System.load(library_path + "chrome_elf.dll");
-            System.load(library_path + "libcef.dll");
+            System.loadLibrary("chrome_elf");
+            System.loadLibrary("libcef");
             LOG.debug("CefApp: libcef.dll load finished ");
             // Other platforms load this library in CefApp.startup().
-            System.load(library_path + "jcef.dll");
+            System.loadLibrary("jcef");
             LOG.debug("CefApp: jcef.dll load finished ");
 
         } else if (OS.isLinux()) {
@@ -538,8 +538,7 @@ public class CefApp extends CefAppHandlerAdapter {
      */
     public static final boolean startup() {
         if (OS.isLinux() || OS.isMacintosh()) {
-            String library_path = System.getProperty("java.library.path");
-            System.load(library_path + "jcef");
+            System.loadLibrary("jcef");
             return N_Startup();
         }
         return true;
