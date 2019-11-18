@@ -42,7 +42,7 @@ import javax.swing.SwingUtilities;
  */
 class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     private CefRenderer renderer_;
-    private GLJPanel canvas_;
+    private GLJPanel canvas_; //can't use heavyweight components because we wrap it in a SwingNode
     private long window_handle_ = 0;
     private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
     private Point screenPoint_ = new Point(0, 0);
