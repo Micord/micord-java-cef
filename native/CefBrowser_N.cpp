@@ -965,6 +965,7 @@ jboolean create(JNIEnv* env,
   CefRefPtr<CefBrowser> parentBrowser =
       GetCefFromJNIObject<CefBrowser>(env, jparentBrowser, "CefBrowser");
 
+  // Add a global ref that will be released in LifeSpanHandler::OnAfterCreated.
   jobject globalRef = env->NewGlobalRef(jbrowser);
   lifeSpanHandler->registerJBrowser(globalRef);
 
@@ -982,7 +983,7 @@ jboolean create(JNIEnv* env,
   }
 
   bool result = CefBrowserHost::CreateBrowser(windowInfo, clientHandler.get(),
-                                              strUrl, settings, context);
+                                              strUrl, settings, NULL, context);
   if (!result) {
     lifeSpanHandler->unregisterJBrowser(globalRef);
     env->DeleteGlobalRef(globalRef);
@@ -1127,7 +1128,10 @@ JNIEXPORT jobject JNICALL
 Java_org_cef_browser_CefBrowser_1N_N_1GetMainFrame(JNIEnv* env, jobject obj) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj, NULL);
   CefRefPtr<CefFrame> frame = browser->GetMainFrame();
-  return GetJNIFrame(env, frame);
+  if (!frame)
+    return NULL;
+  ScopedJNIFrame jframe(env, frame);
+  return jframe.Release();
 }
 
 JNIEXPORT jobject JNICALL
@@ -1135,7 +1139,10 @@ Java_org_cef_browser_CefBrowser_1N_N_1GetFocusedFrame(JNIEnv* env,
                                                       jobject obj) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj, NULL);
   CefRefPtr<CefFrame> frame = browser->GetFocusedFrame();
-  return GetJNIFrame(env, frame);
+  if (!frame)
+    return NULL;
+  ScopedJNIFrame jframe(env, frame);
+  return jframe.Release();
 }
 
 JNIEXPORT jobject JNICALL
@@ -1144,7 +1151,10 @@ Java_org_cef_browser_CefBrowser_1N_N_1GetFrame(JNIEnv* env,
                                                jlong identifier) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj, NULL);
   CefRefPtr<CefFrame> frame = browser->GetFrame(identifier);
-  return GetJNIFrame(env, frame);
+  if (!frame)
+    return NULL;
+  ScopedJNIFrame jframe(env, frame);
+  return jframe.Release();
 }
 
 JNIEXPORT jobject JNICALL
@@ -1153,7 +1163,10 @@ Java_org_cef_browser_CefBrowser_1N_N_1GetFrame2(JNIEnv* env,
                                                 jstring name) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj, NULL);
   CefRefPtr<CefFrame> frame = browser->GetFrame(GetJNIString(env, name));
-  return GetJNIFrame(env, frame);
+  if (!frame)
+    return NULL;
+  ScopedJNIFrame jframe(env, frame);
+  return jframe.Release();
 }
 
 JNIEXPORT jint JNICALL
@@ -1221,9 +1234,10 @@ Java_org_cef_browser_CefBrowser_1N_N_1LoadRequest(JNIEnv* env,
                                                   jobject obj,
                                                   jobject jrequest) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
-  CefRefPtr<CefRequest> request =
-      GetCefFromJNIObject<CefRequest>(env, jrequest, "CefRequest");
-  if (!request.get())
+  ScopedJNIRequest requestObj(env);
+  requestObj.SetHandle(jrequest, false /* should_delete */);
+  CefRefPtr<CefRequest> request = requestObj.GetCefObject();
+  if (!request)
     return;
   browser->GetMainFrame()->LoadRequest(request);
 }
@@ -1234,16 +1248,6 @@ Java_org_cef_browser_CefBrowser_1N_N_1LoadURL(JNIEnv* env,
                                               jstring url) {
   CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
   browser->GetMainFrame()->LoadURL(GetJNIString(env, url));
-}
-
-JNIEXPORT void JNICALL
-Java_org_cef_browser_CefBrowser_1N_N_1LoadString(JNIEnv* env,
-                                                 jobject obj,
-                                                 jstring val,
-                                                 jstring url) {
-  CefRefPtr<CefBrowser> browser = JNI_GET_BROWSER_OR_RETURN(env, obj);
-  browser->GetMainFrame()->LoadString(GetJNIString(env, val),
-                                      GetJNIString(env, url));
 }
 
 JNIEXPORT void JNICALL
@@ -1978,4 +1982,3 @@ Java_org_cef_browser_CefBrowser_1N_N_1NotifyMoveOrResizeStarted(JNIEnv* env,
   }
 #endif
 }
-
