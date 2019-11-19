@@ -4,6 +4,18 @@
 
 package tests.detailed.ui;
 
+import org.cef.CefApp;
+import org.cef.CefClient;
+import org.cef.OS;
+import org.cef.browser.CefBrowser;
+import org.cef.callback.CefPdfPrintCallback;
+import org.cef.callback.CefRunFileDialogCallback;
+import org.cef.callback.CefStringVisitor;
+import org.cef.handler.CefDialogHandler.FileDialogMode;
+import org.cef.misc.CefPdfPrintSettings;
+import org.cef.network.CefCookieManager;
+import org.cef.network.CefRequest;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -32,18 +44,6 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 
-import org.cef.CefApp;
-import org.cef.CefClient;
-import org.cef.OS;
-import org.cef.browser.CefBrowser;
-import org.cef.callback.CefPdfPrintCallback;
-import org.cef.callback.CefRunFileDialogCallback;
-import org.cef.callback.CefStringVisitor;
-import org.cef.handler.CefDialogHandler.FileDialogMode;
-import org.cef.misc.CefPdfPrintSettings;
-import org.cef.network.CefCookieManager;
-import org.cef.network.CefRequest;
-
 import tests.detailed.BrowserFrame;
 import tests.detailed.MainFrame;
 import tests.detailed.dialog.CookieManagerDialog;
@@ -53,6 +53,7 @@ import tests.detailed.dialog.SearchDialog;
 import tests.detailed.dialog.ShowTextDialog;
 import tests.detailed.dialog.UrlRequestDialog;
 import tests.detailed.dialog.WebPluginManagerDialog;
+import tests.detailed.util.DataUri;
 
 @SuppressWarnings("serial")
 public class MenuBar extends JMenuBar {
@@ -300,8 +301,8 @@ public class MenuBar extends JMenuBar {
         testShowText.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                browser_.loadString("<html><body><h1>Hello World</h1></body></html>",
-                        control_pane_.getAddress());
+                browser_.loadURL(DataUri.create(
+                        "text/html", "<html><body><h1>Hello World</h1></body></html>"));
             }
         });
         testMenu.add(testShowText);
@@ -327,7 +328,7 @@ public class MenuBar extends JMenuBar {
                 form += "<p>See implementation of <u>tests.RequestHandler.onBeforeResourceLoad(CefBrowser, CefRequest)</u> for details</p>";
                 form += "</form>";
                 form += "</body></html>";
-                browser_.loadString(form, control_pane_.getAddress());
+                browser_.loadURL(DataUri.create("text/html", form));
             }
         });
         testMenu.add(showForm);
@@ -445,7 +446,7 @@ public class MenuBar extends JMenuBar {
         newwindow.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final MainFrame frame = new MainFrame(OS.isLinux(), false, false, null, null);
+                final MainFrame frame = new MainFrame(OS.isLinux(), false, false, null);
                 frame.setSize(800, 600);
                 frame.setVisible(true);
             }
