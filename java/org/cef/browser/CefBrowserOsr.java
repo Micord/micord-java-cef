@@ -4,9 +4,23 @@
 
 package org.cef.browser;
 
+import com.jogamp.nativewindow.NativeSurface;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.awt.GLJPanel;
+
+import org.cef.CefClient;
+import org.cef.callback.CefDragData;
+import org.cef.handler.CefRenderHandler;
+
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.dnd.DropTarget;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -16,23 +30,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.nio.ByteBuffer;
-
-import com.jogamp.nativewindow.NativeSurface;
-import com.jogamp.opengl.awt.GLJPanel;
-import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.GLCapabilities;
 
 import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
-
-import org.cef.CefClient;
-import org.cef.callback.CefDragData;
-import org.cef.handler.CefRenderHandler;
 
 /**
  * This class represents an off-screen rendered browser.
@@ -41,7 +42,7 @@ import org.cef.handler.CefRenderHandler;
  */
 class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     private CefRenderer renderer_;
-    private GLJPanel canvas_;
+    private GLJPanel canvas_; //can't use heavyweight components because we wrap it in a SwingNode
     private long window_handle_ = 0;
     private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
     private Point screenPoint_ = new Point(0, 0);
@@ -76,11 +77,6 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     }
 
     @Override
-    public void setScrollAmount(int scrollAmount) {
-
-    }
-
-    @Override
     protected CefBrowser_N createDevToolsBrowser(CefClient client, String url,
             CefRequestContext context, CefBrowser_N parent, Point inspectAt) {
         return new CefBrowserOsr(
@@ -94,7 +90,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
                 surface.lockSurface();
                 window_handle_ = getWindowHandle(surface.getSurfaceHandle());
                 surface.unlockSurface();
-                assert(window_handle_ != 0);
+                assert (window_handle_ != 0);
             }
         }
         return window_handle_;
@@ -214,6 +210,9 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
                 setFocus(true);
             }
         });
+
+        // Connect the Canvas with a drag and drop listener.
+        new DropTarget(canvas_, new CefDropTargetListenerOsr(this));
     }
 
     @Override
