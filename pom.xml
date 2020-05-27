@@ -20,14 +20,14 @@
     <repository>
       <id>mikord</id>
       <name>CG Repo</name>
-      <url>http://repo.cg.ru/repository/all</url>
+      <url>http://repo.micord.ru/repository/all</url>
     </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>mikord</id>
       <name>CG plugins-releases</name>
-      <url>http://repo.cg.ru/repository/all</url>
+      <url>http://repo.micord.ru/repository/all</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -35,12 +35,12 @@
     <repository>
       <id>mikord</id>
       <name>ASD CG Release repository</name>
-      <url>http://repo.cg.ru/repository/libs-releases-local</url>
+      <url>http://repo.micord.ru/repository/libs-releases-local</url>
     </repository>
     <snapshotRepository>
       <id>mikord</id>
       <name>ASD CG Snapshots repository</name>
-      <url>http://repo.cg.ru/repository/libs-snapshots-local</url>
+      <url>http://repo.micord.ru/repository/libs-snapshots-local</url>
     </snapshotRepository>
   </distributionManagement>
 
