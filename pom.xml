@@ -22,6 +22,11 @@
       <name>CG Repo</name>
       <url>http://repo.micord.ru/repository/all</url>
     </repository>
+    <repository>
+      <id>micord</id>
+      <name>micord</name>
+      <url>https://repo.micord.ru/repository/maven-micord</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
