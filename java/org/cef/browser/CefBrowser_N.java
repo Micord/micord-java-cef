@@ -38,15 +38,16 @@ import javax.swing.SwingUtilities;
  * CefBrowser instance, please use CefBrowserFactory.
  */
 abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
-    private boolean isPending_ = false;
-    private CefClient client_;
-    private String url_;
-    private CefRequestContext request_context_;
-    private CefBrowser_N parent_ = null;
-    private Point inspectAt_ = null;
-    private CefBrowser_N devTools_ = null;
+    private volatile boolean isPending_ = false;
+    private final CefClient client_;
+    private final String url_;
+    private final CefRequestContext request_context_;
+    private volatile CefBrowser_N parent_ = null;
+    private volatile Point inspectAt_ = null;
+    private volatile CefBrowser_N devTools_ = null;
     private boolean closeAllowed_ = false;
-    private boolean isClosed_ = false;
+    private volatile boolean isClosed_ = false;
+    private volatile boolean isClosing_ = false;
 
     protected CefBrowser_N(CefClient client, String url, CefRequestContext context,
             CefBrowser_N parent, Point inspectAt) {
@@ -154,12 +155,19 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
             boolean osr, boolean transparent, Component canvas, CefRequestContext context) {
         if (getNativeRef("CefBrowser") == 0 && !isPending_) {
             try {
-                isPending_ = N_CreateBrowser(
+                N_CreateBrowser(
                         clientHandler, windowHandle, url, osr, transparent, canvas, context);
             } catch (UnsatisfiedLinkError err) {
                 err.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Called async from the (native) main UI thread.
+     */
+    private void notifyBrowserCreated() {
+        isPending_ = true;
     }
 
     /**
@@ -434,6 +442,9 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
 
     @Override
     public void close(boolean force) {
+        if (isClosing_ || isClosed_) return;
+        if (force) isClosing_ = true;
+
         try {
             N_Close(force);
         } catch (UnsatisfiedLinkError ule) {
@@ -522,10 +533,9 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     }
 
     @Override
-    public void find(int identifier, String searchText, boolean forward, boolean matchCase,
-            boolean findNext) {
+    public void find(String searchText, boolean forward, boolean matchCase, boolean findNext) {
         try {
-            N_Find(identifier, searchText, forward, matchCase, findNext);
+            N_Find(searchText, forward, matchCase, findNext);
         } catch (UnsatisfiedLinkError ule) {
             ule.printStackTrace();
         }
@@ -720,6 +730,8 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     }
 
     protected final void setParent(long windowHandle, Component canvas) {
+        if (isClosing_ || isClosed_) return;
+
         try {
             N_SetParent(windowHandle, canvas);
         } catch (UnsatisfiedLinkError ule) {
@@ -782,8 +794,8 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private final native void N_Print();
     private final native void N_PrintToPDF(
             String path, CefPdfPrintSettings settings, CefPdfPrintCallback callback);
-    private final native void N_Find(int identifier, String searchText, boolean forward,
-            boolean matchCase, boolean findNext);
+    private final native void N_Find(
+            String searchText, boolean forward, boolean matchCase, boolean findNext);
     private final native void N_StopFinding(boolean clearSelection);
     private final native void N_CloseDevTools();
     private final native void N_ReplaceMisspelling(String word);
