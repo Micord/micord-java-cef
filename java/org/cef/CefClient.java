@@ -91,6 +91,7 @@ public class CefClient extends CefClientHandler
         public void propertyChange(PropertyChangeEvent evt) {
             if (focusedBrowser_ != null) {
                 Component browserUI = focusedBrowser_.getUIComponent();
+                if (browserUI == null) return;
                 Object oldUI = evt.getOldValue();
                 if (isPartOf(oldUI, browserUI)) {
                     focusedBrowser_.setFocus(false);
@@ -407,7 +408,9 @@ public class CefClient extends CefClientHandler
         if (browser == null) return;
 
         browser.setFocus(false);
-        Container parent = browser.getUIComponent().getParent();
+        Component uiComponent = browser.getUIComponent();
+        if (uiComponent == null) return;
+        Container parent = uiComponent.getParent();
         if (parent != null) {
             FocusTraversalPolicy policy = null;
             while (parent != null) {
@@ -417,8 +420,8 @@ public class CefClient extends CefClientHandler
             }
             if (policy != null) {
                 Component nextComp = next
-                        ? policy.getComponentAfter(parent, browser.getUIComponent())
-                        : policy.getComponentBefore(parent, browser.getUIComponent());
+                        ? policy.getComponentAfter(parent, uiComponent)
+                        : policy.getComponentBefore(parent, uiComponent);
                 if (nextComp == null) {
                     policy.getDefaultComponent(parent).requestFocus();
                 } else {
@@ -434,21 +437,27 @@ public class CefClient extends CefClientHandler
     public boolean onSetFocus(final CefBrowser browser, FocusSource source) {
         if (browser == null) return false;
 
-        boolean alreadyHandled = false;
-        if (focusHandler_ != null) alreadyHandled = focusHandler_.onSetFocus(browser, source);
+        Boolean alreadyHandled = Boolean.FALSE;
+        if (focusHandler_ != null) {
+            Component uiComponent = browser.getUIComponent();
+            if (uiComponent == null) return true;
+            alreadyHandled = focusHandler_.onSetFocus(browser, source);
+        }
         return alreadyHandled;
     }
 
     @Override
     public void onGotFocus(CefBrowser browser) {
         if (browser == null) return;
-        if (focusedBrowser_ == browser) { //TODO remove WEBBPMNEXT-5646 issue fix when it will be fixed in upstream.
-            return;
-        }
+        if (focusedBrowser_ == browser) return; // prevent recursive call (in OSR)
 
         focusedBrowser_ = browser;
         browser.setFocus(true);
-        if (focusHandler_ != null) focusHandler_.onGotFocus(browser);
+        if (focusHandler_ != null) {
+            Component uiComponent = browser.getUIComponent();
+            if (uiComponent == null ) return;
+            focusHandler_.onGotFocus(browser);
+        };
     }
 
     // CefJSDialogHandler
@@ -521,21 +530,31 @@ public class CefClient extends CefClientHandler
     // CefLifeSpanHandler
 
     public CefClient addLifeSpanHandler(CefLifeSpanHandler handler) {
-        if (lifeSpanHandler_ == null) lifeSpanHandler_ = handler;
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ == null) lifeSpanHandler_ = handler;
+        }
         return this;
     }
 
     public void removeLifeSpanHandler() {
-        lifeSpanHandler_ = null;
+        synchronized (lifeSpanHandler_) {
+            lifeSpanHandler_ = null;
+        }
     }
 
     @Override
     public boolean onBeforePopup(
             CefBrowser browser, CefFrame frame, String target_url, String target_frame_name) {
         if (isDisposed_) return true;
-        if (lifeSpanHandler_ != null && browser != null)
-            return lifeSpanHandler_.onBeforePopup(browser, frame, target_url, target_frame_name);
-        return false;
+        if (browser == null)
+            return false;
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ != null && browser != null)
+                return lifeSpanHandler_.onBeforePopup(browser, frame, target_url,
+                    target_frame_name
+                );
+            return false;
+        }
     }
 
     @Override
@@ -547,26 +566,35 @@ public class CefClient extends CefClientHandler
         synchronized (browser_) {
             browser_.put(identifier, browser);
         }
-        if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterCreated(browser);
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterCreated(browser);
+        }
     }
 
     @Override
     public void onAfterParentChanged(CefBrowser browser) {
         if (browser == null) return;
-        if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterParentChanged(browser);
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterParentChanged(browser);
+        }
     }
 
     @Override
     public boolean doClose(CefBrowser browser) {
         if (browser == null) return false;
-        if (lifeSpanHandler_ != null) return lifeSpanHandler_.doClose(browser);
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ != null) return lifeSpanHandler_.doClose(browser);
+        }
         return browser.doClose();
     }
 
     @Override
     public void onBeforeClose(CefBrowser browser) {
         if (browser == null) return;
-        if (lifeSpanHandler_ != null) lifeSpanHandler_.onBeforeClose(browser);
+
+        synchronized (lifeSpanHandler_) {
+            if (lifeSpanHandler_ != null) lifeSpanHandler_.onBeforeClose(browser);
+        }
         browser.onBeforeClose();
 
         // remove browser reference
@@ -606,7 +634,9 @@ public class CefClient extends CefClientHandler
                 removeWindowHandler(this);
                 super.dispose();
 
-                CefApp.getInstance().clientWasDisposed(this);
+                if (CefApp.getState() != CefApp.CefAppState.TERMINATED) {
+                    CefApp.getInstance().clientWasDisposed(this);
+                }
             }
         }
     }

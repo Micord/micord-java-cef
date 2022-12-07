@@ -13,6 +13,7 @@ import org.cef.callback.CefRunFileDialogCallback;
 import org.cef.callback.CefStringVisitor;
 import org.cef.handler.CefClientHandler;
 import org.cef.handler.CefDialogHandler.FileDialogMode;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefRenderHandler;
 import org.cef.handler.CefWindowHandler;
 import org.cef.misc.CefPdfPrintSettings;
@@ -48,6 +49,7 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private boolean closeAllowed_ = false;
     private volatile boolean isClosed_ = false;
     private volatile boolean isClosing_ = false;
+    private volatile boolean isCreating_ = false;
 
     protected CefBrowser_N(CefClient client, String url, CefRequestContext context,
             CefBrowser_N parent, Point inspectAt) {
@@ -101,22 +103,22 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     @Override
     public synchronized boolean doClose() {
         if (closeAllowed_) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    // Trigger close of the parent window.
+                    Component uiComponent = getUIComponent();
+                    if (uiComponent == null) return;
+                    Component parent = SwingUtilities.getRoot(uiComponent);
+                    if (parent != null) {
+                        parent.dispatchEvent(
+                            new WindowEvent((Window) parent, WindowEvent.WINDOW_CLOSING));
+                    }
+                }
+            });
             // Allow the close to proceed.
             return false;
         }
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // Trigger close of the parent window.
-                Component parent = SwingUtilities.getRoot(getUIComponent());
-                if (parent != null) {
-                    parent.dispatchEvent(
-                            new WindowEvent((Window) parent, WindowEvent.WINDOW_CLOSING));
-                }
-            }
-        });
-
         // Cancel the close.
         return true;
     }
@@ -153,7 +155,11 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
      */
     protected void createBrowser(CefClientHandler clientHandler, long windowHandle, String url,
             boolean osr, boolean transparent, Component canvas, CefRequestContext context) {
+        if (isClosing_ || isClosed_ || isCreating_)
+            return;
+
         if (getNativeRef("CefBrowser") == 0 && !isPending_) {
+            isCreating_ = true;
             try {
                 N_CreateBrowser(
                         clientHandler, windowHandle, url, osr, transparent, canvas, context);
@@ -444,6 +450,21 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     public void close(boolean force) {
         if (isClosing_ || isClosed_) return;
         if (force) isClosing_ = true;
+
+
+        if (getNativeRef("CefBrowser") == 0) {
+            if (client_ != null) {
+                client_.addLifeSpanHandler(new CefLifeSpanHandlerAdapter() {
+                    @Override
+                    public void onAfterCreated(CefBrowser browser) {
+                        if (browser == CefBrowser_N.this) {
+                            browser.close(force);
+                        }
+                    }
+                });
+            }
+            return;
+        }
 
         try {
             N_Close(force);
