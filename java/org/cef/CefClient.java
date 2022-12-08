@@ -57,8 +57,10 @@ import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.SwingUtilities;
@@ -80,7 +82,7 @@ public class CefClient extends CefClientHandler
     private CefFocusHandler focusHandler_ = null;
     private CefJSDialogHandler jsDialogHandler_ = null;
     private CefKeyboardHandler keyboardHandler_ = null;
-    private CefLifeSpanHandler lifeSpanHandler_ = null;
+    private final List<CefLifeSpanHandler> lifeSpanHandlers_ = new ArrayList<>();
     private CefLoadHandler loadHandler_ = null;
     private CefPrintHandler printHandler_ = null;
     private CefRequestHandler requestHandler_ = null;
@@ -101,6 +103,11 @@ public class CefClient extends CefClientHandler
         }
     };
 
+    // workaround for JBR-4176 Some tests fail after JCEF update
+    // Empiric observation: some client handlers may be ignored for CEF version 95 (and later) without adding at least one router
+    // TODO: remove when DisplayHandlerTest (or IDEA259472Test) starts running with empty list of message routers
+    private CefMessageRouter myEmptyRouter;
+
     /**
      * The CTOR is only accessible within this package.
      * Use CefApp.createClient() to create an instance of
@@ -112,6 +119,8 @@ public class CefClient extends CefClientHandler
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener(
                 propertyChangeListener);
+
+        addMessageRouter(myEmptyRouter = CefMessageRouter.create());
     }
 
     private boolean isPartOf(Object obj, Component browserUI) {
@@ -129,6 +138,12 @@ public class CefClient extends CefClientHandler
     public void dispose() {
         isDisposed_ = true;
         cleanupBrowser(-1);
+
+        if (myEmptyRouter != null) {
+            removeMessageRouter(myEmptyRouter);
+            myEmptyRouter.dispose();
+            myEmptyRouter = null;
+        }
     }
 
     // CefClientHandler
@@ -530,15 +545,15 @@ public class CefClient extends CefClientHandler
     // CefLifeSpanHandler
 
     public CefClient addLifeSpanHandler(CefLifeSpanHandler handler) {
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ == null) lifeSpanHandler_ = handler;
+        synchronized (lifeSpanHandlers_) {
+            lifeSpanHandlers_.add(handler);
         }
         return this;
     }
 
     public void removeLifeSpanHandler() {
-        synchronized (lifeSpanHandler_) {
-            lifeSpanHandler_ = null;
+        synchronized (lifeSpanHandlers_) {
+            lifeSpanHandlers_.clear();
         }
     }
 
@@ -548,12 +563,12 @@ public class CefClient extends CefClientHandler
         if (isDisposed_) return true;
         if (browser == null)
             return false;
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ != null && browser != null)
-                return lifeSpanHandler_.onBeforePopup(browser, frame, target_url,
-                    target_frame_name
-                );
-            return false;
+        synchronized (lifeSpanHandlers_) {
+            boolean result = false;
+            for (CefLifeSpanHandler lsh: lifeSpanHandlers_) {
+                result |= lsh.onBeforePopup(browser, frame, target_url, target_frame_name);
+            }
+            return result;
         }
     }
 
@@ -566,24 +581,27 @@ public class CefClient extends CefClientHandler
         synchronized (browser_) {
             browser_.put(identifier, browser);
         }
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterCreated(browser);
+        synchronized (lifeSpanHandlers_) {
+            for (CefLifeSpanHandler lsh: lifeSpanHandlers_)
+                lsh.onAfterCreated(browser);
         }
     }
 
     @Override
     public void onAfterParentChanged(CefBrowser browser) {
         if (browser == null) return;
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ != null) lifeSpanHandler_.onAfterParentChanged(browser);
+        synchronized (lifeSpanHandlers_) {
+            for (CefLifeSpanHandler lsh: lifeSpanHandlers_)
+                lsh.onAfterParentChanged(browser);
         }
     }
 
     @Override
     public boolean doClose(CefBrowser browser) {
         if (browser == null) return false;
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ != null) return lifeSpanHandler_.doClose(browser);
+        synchronized (lifeSpanHandlers_) {
+            for (CefLifeSpanHandler lsh: lifeSpanHandlers_)
+                lsh.doClose(browser);
         }
         return browser.doClose();
     }
@@ -592,8 +610,9 @@ public class CefClient extends CefClientHandler
     public void onBeforeClose(CefBrowser browser) {
         if (browser == null) return;
 
-        synchronized (lifeSpanHandler_) {
-            if (lifeSpanHandler_ != null) lifeSpanHandler_.onBeforeClose(browser);
+        synchronized (lifeSpanHandlers_) {
+            for (CefLifeSpanHandler lsh: lifeSpanHandlers_)
+                lsh.onBeforeClose(browser);
         }
         browser.onBeforeClose();
 
