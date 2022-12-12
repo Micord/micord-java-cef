@@ -4,8 +4,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.37</version>
-  <packaging>bundle</packaging>
+  <version>3.39</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,14 +20,19 @@
     <repository>
       <id>mikord</id>
       <name>CG Repo</name>
-      <url>http://repo.cg.ru/repository/all</url>
+      <url>http://repo.micord.ru/repository/all</url>
+    </repository>
+    <repository>
+      <id>micord</id>
+      <name>micord</name>
+      <url>https://repo.micord.ru/repository/maven-micord</url>
     </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>mikord</id>
       <name>CG plugins-releases</name>
-      <url>http://repo.cg.ru/repository/all</url>
+      <url>http://repo.micord.ru/repository/all</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -36,12 +40,12 @@
     <repository>
       <id>mikord</id>
       <name>ASD CG Release repository</name>
-      <url>http://repo.cg.ru/repository/libs-releases-local</url>
+      <url>http://repo.micord.ru/repository/libs-releases-local</url>
     </repository>
     <snapshotRepository>
       <id>mikord</id>
       <name>ASD CG Snapshots repository</name>
-      <url>http://repo.cg.ru/repository/libs-snapshots-local</url>
+      <url>http://repo.micord.ru/repository/libs-snapshots-local</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -50,37 +54,16 @@
       <groupId>org.jogamp.gluegen</groupId>
       <artifactId>gluegen-rt</artifactId>
       <version>2.3.2</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jogamp.jogl</groupId>
       <artifactId>jogl-all</artifactId>
       <version>2.3.2</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jogamp.jogl</groupId>
-      <artifactId>jogl-all-main</artifactId>
-      <version>2.3.2</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -114,11 +97,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.1.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>3.0.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -170,23 +148,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-          <configuration>
-            <instructions>
-              <Import-Package>
-                !com.jogamp.openal,!com.jogamp.openal.*, javax.swing, org.slf4j.*
-              </Import-Package>
-              <Embed-Dependency>
-                groupId=org.jogamp.gluegen;artifactId=gluegen-rt;inline=false,
-                groupId=org.jogamp.jogl;artifactId=jogl-all;inline=false
-              </Embed-Dependency>
-              <Embed-Transitive>false</Embed-Transitive>
-            </instructions>
-          </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
