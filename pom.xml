@@ -4,7 +4,7 @@
 
   <groupId>ru.cg.webbrowser</groupId>
   <artifactId>cefbrowser</artifactId>
-  <version>3.40.1-SNAPSHOT</version>
+  <version>3.40.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
