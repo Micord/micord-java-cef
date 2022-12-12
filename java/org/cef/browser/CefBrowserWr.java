@@ -410,7 +410,7 @@ class CefBrowserWr extends CefBrowser_N {
             }
         } else if (hasParent && justCreated_) {
             setParent(windowHandle, canvas);
-            setFocus(true);
+            // setFocus(true); do not request focus on show
             justCreated_ = false;
         }
 
